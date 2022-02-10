@@ -1,6 +1,0 @@
-/node_modules
-/.airtableblocksrc.json
-/build
-/.block
-/.env
-.gitignore
