@@ -3,3 +3,4 @@
 /build
 /.block
 /.env
+.gitignore
