@@ -9,7 +9,6 @@ export const downloadFile = (file, fileName, type = '') => {
   document.body.removeChild(link);
 };
 
-
 export const downloadCsv = (data, fileName) => {
   let csvContent = '\ufeff'; // UTF16LE BOM for Microsoft Excel
   data.forEach((rowArray) => {
