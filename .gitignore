@@ -3,5 +3,4 @@
 /build
 /.block
 /.env
-.gitignore
 .DS_Store
