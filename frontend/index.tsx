@@ -11,10 +11,10 @@ const App = () => {
   const setAmountField = (key) => (e) => { setAmounts({ ...amounts, [key]: e.target.value }); };
   return (
     <>
-      <NiInput value={amounts.rent} onChange={setAmountField('rent')} label="Montant Loyer" required/>
-      <NiInput value={amounts.rentalExpenses} onChange={setAmountField('rentalExpenses')} 
+      <NiInput value={amounts.rent} onChange={setAmountField('rent')} label="Montant Loyer" type='number' required/>
+      <NiInput value={amounts.rentalExpenses} onChange={setAmountField('rentalExpenses')} type='number'
           label="Montant Charges locatives" required/>
-      <NiInput value={amounts.currentExpenses} onChange={setAmountField('currentExpenses')}
+      <NiInput value={amounts.currentExpenses} onChange={setAmountField('currentExpenses')} type='number'
           label="Montant Frais courants" required/>
       <Button onClick={downloadSEPAXml} icon="edit" disabled={!enableDownload}>Telecharger Le SEPA</Button>
     </>

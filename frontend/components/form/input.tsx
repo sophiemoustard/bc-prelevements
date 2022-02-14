@@ -1,13 +1,13 @@
 import { Input, Box, Text, colors } from '@airtable/blocks/ui';
 import React from 'react';
 
-const NiInput = ({value, label, onChange, required = false }) => (
+const NiInput = ({value, label, onChange, type = null, required = false }) => (
   <>
     <Box style={style.captionContainer}>
       <Text style={style.text}>{label}</Text>
       {required && <Text style={style.required}>*</Text>}
     </Box>
-    <Input value={value} onChange={onChange} style={style.input} />
+    <Input value={value} onChange={onChange} style={style.input} type={type} />
   </>
 );
 
