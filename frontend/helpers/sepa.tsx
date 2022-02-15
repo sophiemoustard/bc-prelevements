@@ -1,6 +1,6 @@
 import { downloadXML } from './files'
-import { getConfig } from './airtable';
 import dayjs from './dayjs';
+import { getConfig, getRoommatesData } from './airtable';
 
 
 export const createXMLDocument = () => ({
@@ -11,6 +11,9 @@ export const createXMLDocument = () => ({
     CstmrDrctDbtInitn: {
       GrpHdr: {},
       PmtInf: [],
+    },
+    PmtInf: {
+      DrctDbtTxInf: [],
     },
   },
 });
@@ -26,8 +29,44 @@ export const generateSEPAHeader = (data) => ({
   },
 });
 
+export const addTransactionInfo = (data) => {
+  const obj = { DrctDbtTxInf: [] };
+
+  for (const transaction of data) {
+    obj.DrctDbtTxInf.push({
+      PmtId: {
+        InstrId: transaction.number,
+        EndToEndId: transaction._id,
+      },
+      InstdAmt: {
+        '@Ccy': 'EUR',
+        '#text': transaction.netInclTaxes,
+      },
+      DrctDbtTx: {
+        MndtRltdInf: {
+          MndtId: transaction.rum,
+          DtOfSgntr: 'Date de signature',
+        },
+      },
+      DbtrAgt: { FinInstnId: { BIC: transaction.customerInfo.payment.bic } },
+      Dbtr: { Nm: transaction.customerInfo.payment.bankAccountOwner.trim() },
+      DbtrAcct: { Id: { IBAN: transaction.customerInfo.payment.iban } },
+    });
+  }
+
+  return obj;
+};
+
 export const downloadSEPAXml = async () => {
   const configData = await getConfig();
+  const roommatesData = await getRoommatesData();
+  const formattedRoommatesData = roommatesData.map(rm => ({
+    _id: 'id',
+    number: 'REG1234567',
+    netInclTaxes: '80',
+    rum: rm.debitorRUM,
+    customerInfo: { payment: { bic: rm.debitorBIC, bankAccountOwner: rm.debitorName, iban: rm.debitorIBAN } }
+  }));
   const xmlContent = createXMLDocument();
 
   xmlContent.Document.CstmrDrctDbtInitn.GrpHdr = generateSEPAHeader({
@@ -38,6 +77,8 @@ export const downloadSEPAXml = async () => {
     creditorName: configData.creditorName,
     ics: configData.ics,
   });
+
+  xmlContent.Document.PmtInf = addTransactionInfo(formattedRoommatesData);
 
   const filename = `prelevements_biens_communs_${dayjs().format('YYYY-MM-DD_HH-mm')}.xml`;
   return downloadXML(xmlContent, filename)

@@ -2,7 +2,6 @@ import { base } from '@airtable/blocks';
 import {
   CONFIG_TABLE_ID,
   CREDITOR_NAME_FIELD_ID,
-  CREDITOR_ICS_FIELD_ID,
   CREDITOR_IBAN_FIELD_ID,
   CREDITOR_BIC_FIELD_ID,
   CREDITOR_PREFIX_FIELD_ID,
@@ -22,7 +21,7 @@ export const getConfig = async () => {
 
   const configs = {
     creditorName: configRecord.getCellValue(CREDITOR_NAME_FIELD_ID),
-    ics: configRecord.getCellValue(CREDITOR_ICS_FIELD_ID),
+    ics: configRecord.getCellValue(ICS_FIELD_ID),
     creditorIBAN: configRecord.getCellValue(CREDITOR_IBAN_FIELD_ID),
     creditorBIC: configRecord.getCellValue(CREDITOR_BIC_FIELD_ID),
     creditorPrefix: configRecord.getCellValue(CREDITOR_PREFIX_FIELD_ID),
@@ -43,7 +42,6 @@ export const getRoommatesData = async () => {
       debitorIBAN: record.getCellValue(IBAN_FIELD_ID),
       debitorRUM: record.getCellValue(RUM_FIELD_ID),
       debitorBIC: record.getCellValue(BIC_FIELD_ID),
-      debitorICS: record.getCellValue(ICS_FIELD_ID),
     };
     roommatesData.push(roommateData);
   }
