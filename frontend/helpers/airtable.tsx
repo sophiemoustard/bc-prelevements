@@ -1,4 +1,6 @@
 import { base } from '@airtable/blocks';
+import { isInvalidIBAN, isInvalidBIC, isInvalidICS, isInvalidPrefix } from './validations';
+import { throwValidationError } from './utils';
 import {
   CONFIG_TABLE_ID,
   CREDITOR_NAME_FIELD_ID,
@@ -12,15 +14,35 @@ import {
   BIC_FIELD_ID,
   ICS_FIELD_ID,
 } from '../../.env/models';
+import { INTERNAL_ERROR } from '../data/constants';
+
+const validateSingleRecordInConfig = (queryResult) => {
+  if (queryResult.records.length !== 1) {
+    throwValidationError('Erreur dans la table CONFIGURATIONS: cette table doit contenir une et une seule ligne.')
+  }
+}
+
+const validateConfigContent = (data) => {
+  const errors = []
+  if (data.creditorName.length > 70) errors.push('le nom du créancier doit contenir au maximum 70 caractères,')
+  if (isInvalidICS(data.ics)) errors.push('l\'ICS est invalide,')
+  if (isInvalidIBAN(data.creditorIBAN)) errors.push('l\'IBAN est invalide,')
+  if (isInvalidBIC(data.creditorBIC)) errors.push('le BIC est invalide,')
+  if (isInvalidPrefix(data.creditorPrefix)) errors.push('le préfixe doit contenir exactement trois chiffres,')
+
+  if (errors.length) {
+    throwValidationError(['Erreur(s) dans la table CONFIGURATIONS:', ...errors].join(' '));
+  }
+}
 
 export const getConfigData = async () => {
   let queryResult;
   try {
     const configTable = base.getTable(CONFIG_TABLE_ID);
     const queryResult = await configTable.selectRecordsAsync();
+    validateSingleRecordInConfig(queryResult);
 
     const configRecord = queryResult.records[0];
-  
     const configs = {
       creditorName: configRecord.getCellValue(CREDITOR_NAME_FIELD_ID),
       ics: configRecord.getCellValue(ICS_FIELD_ID),
@@ -28,12 +50,14 @@ export const getConfigData = async () => {
       creditorBIC: configRecord.getCellValue(CREDITOR_BIC_FIELD_ID),
       creditorPrefix: configRecord.getCellValue(CREDITOR_PREFIX_FIELD_ID),
     }
+    validateConfigContent(configs)
     
     return configs;
   } catch (e) {
-    console.error('Error: something went wrong during extraction of table CONFIGURATION');
+    console.error('Error: something went wrong during extraction of table CONFIGURATIONS.');
     console.error(e);
-    throw e;
+    if (e.name === 'validation error') throw e;
+    throw INTERNAL_ERROR;
   } finally {
     if (queryResult && queryResult.isDataLoaded) queryResult.unloadData();
   }

@@ -15,10 +15,7 @@ const App = () => {
     try {
       await downloadSEPAXml()
     } catch (e) {
-      dispatchError({ 
-        type: SET_ERROR,
-        payload: 'Une erreur interne s\'est produite, veuillez contacter l\'équipe technique.',
-      });
+      dispatchError({ type: SET_ERROR, payload: e.message });
     }
   }
 
