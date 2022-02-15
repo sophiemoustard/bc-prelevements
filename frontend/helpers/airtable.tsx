@@ -14,20 +14,29 @@ import {
 } from '../../.env/models';
 
 export const getConfigData = async () => {
-  const configTable = base.getTable(CONFIG_TABLE_ID);
-  const queryResult = await configTable.selectRecordsAsync();
-  const configRecord = queryResult.records[0];
+  let queryResult;
+  try {
+    const configTable = base.getTable(CONFIG_TABLE_ID);
+    const queryResult = await configTable.selectRecordsAsync();
 
-  const configs = {
-    creditorName: configRecord.getCellValue(CREDITOR_NAME_FIELD_ID),
-    ics: configRecord.getCellValue(ICS_FIELD_ID),
-    creditorIBAN: configRecord.getCellValue(CREDITOR_IBAN_FIELD_ID),
-    creditorBIC: configRecord.getCellValue(CREDITOR_BIC_FIELD_ID),
-    creditorPrefix: configRecord.getCellValue(CREDITOR_PREFIX_FIELD_ID),
-  }
+    const configRecord = queryResult.records[0];
+  
+    const configs = {
+      creditorName: configRecord.getCellValue(CREDITOR_NAME_FIELD_ID),
+      ics: configRecord.getCellValue(ICS_FIELD_ID),
+      creditorIBAN: configRecord.getCellValue(CREDITOR_IBAN_FIELD_ID),
+      creditorBIC: configRecord.getCellValue(CREDITOR_BIC_FIELD_ID),
+      creditorPrefix: configRecord.getCellValue(CREDITOR_PREFIX_FIELD_ID),
+    }
     
-  queryResult.unloadData();
-  return configs;
+    return configs;
+  } catch (e) {
+    console.error('Error: something went wrong during extraction of table CONFIGURATION');
+    console.error(e);
+    throw e;
+  } finally {
+    if (queryResult && queryResult.isDataLoaded) queryResult.unloadData();
+  }
 }
 
 export const getRoommatesData = async () => {
