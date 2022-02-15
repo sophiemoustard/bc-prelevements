@@ -1,6 +1,6 @@
 import { downloadXML } from './files'
-import { getDateForFileName } from './dates';
 import { getConfig } from './airtable';
+import dayjs from './dayjs';
 
 
 export const createXMLDocument = () => ({
@@ -39,6 +39,6 @@ export const downloadSEPAXml = async () => {
     ics: configData.ics,
   });
 
-  const filename = `prelevements_biens_communs_${getDateForFileName()}.xml`;
+  const filename = `prelevements_biens_communs_${dayjs().format('YYYY-MM-DD_HH-mm')}.xml`;
   return downloadXML(xmlContent, filename)
 }
