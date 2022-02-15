@@ -1,4 +1,3 @@
-import { useRecords, useBase } from '@airtable/blocks/ui';
 import { base } from '@airtable/blocks';
 import {
   CONFIG_TABLE_ID,
@@ -26,18 +25,3 @@ export const getConfig = async () => {
   queryResult.unloadData();
   return configs;
 }
-
-export const useTableContentAsCsv = (tableId: string) => {
-  const base = useBase();
-  const table = base.getTableById(tableId);
-  const records = useRecords(table);
-  const { fields } = table;
-
-  return [
-    fields.map(field => field.name),
-    ...records.map(record => fields.reduce(
-      (acc, field) => [ ...acc, record.getCellValue(field) ],
-      []
-    ))
-  ];
-};
