@@ -39,6 +39,6 @@ export const downloadSEPAXml = async () => {
     ics: configData.ics,
   });
 
-  const filename = `prelevements_biens_communs_${dayjs().format('YYYYMMDD_HHmm')}.xml`;
+  const filename = `prelevements_biens_communs_${dayjs().format('YYYY-MM-DD_HH-mm')}.xml`;
   return downloadXML(xmlContent, filename)
 }
