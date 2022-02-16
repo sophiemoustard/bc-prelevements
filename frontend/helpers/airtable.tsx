@@ -1,6 +1,6 @@
 import { base } from '@airtable/blocks';
 import { isValidIBAN, isValidBIC, isValidICS, isValidPrefix } from './validations';
-import { throwValidationError, appendAndThrow } from './utils';
+import { throwValidationError, addMessageAndThrow } from './errors';
 import {
   CONFIG_TABLE_ID,
   CREDITOR_NAME_FIELD_ID,
@@ -53,7 +53,7 @@ export const getConfigData = async () => {
     
     return configs;
   } catch (e) {
-    appendAndThrow(e, 'error during extraction of configuration table');
+    addMessageAndThrow(e, 'error during extraction of configuration table');
   } finally {
     if (queryResult && queryResult.isDataLoaded) queryResult.unloadData();
   }

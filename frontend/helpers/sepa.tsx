@@ -1,7 +1,7 @@
 import { downloadXML } from './files'
 import dayjs from './dayjs';
 import { getConfigData, getRoommatesData } from './airtable';
-import { appendAndThrow } from './utils';
+import { addMessageAndThrow } from './errors';
 
 
 export const createXMLDocument = () => ({
@@ -84,6 +84,6 @@ export const downloadSEPAXml = async () => {
     const filename = `prelevements_biens_communs_${dayjs().format('YYYY-MM-DD_HH-mm')}.xml`;
     return downloadXML(xmlContent, filename)
   } catch (e) {
-    appendAndThrow(e, 'error during generation of sepa file');
+    addMessageAndThrow(e, 'error during generation of sepa file');
   }
 }

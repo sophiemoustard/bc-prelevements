@@ -6,7 +6,7 @@ export const throwValidationError = (message) => {
   throw error;
 }
 
-export const appendAndThrow = (e, appendMessage) => {
-  if (e.name !== VALIDATION_ERROR) e.message = e.message.concat('\n\t', appendMessage);
+export const addMessageAndThrow = (e, addedMessage) => {
+  if (e.name !== VALIDATION_ERROR) e.message = e.message.concat('\n\t', addedMessage);
   throw e;
 }
