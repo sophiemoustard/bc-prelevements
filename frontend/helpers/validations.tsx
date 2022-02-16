@@ -1,9 +1,9 @@
-import { isValidIBAN, isValidBIC } from 'ibantools';
+import { isValidIBAN as _isValidIBAN, isValidBIC as _isValidBIC } from 'ibantools';
 
-export const isInvalidIBAN = value => !value || !isValidIBAN(value.split(' ').join(''));
+export const isValidIBAN = value => value && _isValidIBAN(value.split(' ').join(''));
 
-export const isInvalidBIC = value => !value || !isValidBIC(value);
+export const isValidBIC = value => value && _isValidBIC(value);
 
-export const isInvalidICS = value => !value || !/^[A-Z]{2}[0-9]{2}[A-Z]{3}[0-9]{6}$/.test(value);
+export const isValidICS = value => value && /^[A-Z]{2}[0-9]{2}[A-Z]{3}[0-9]{6}$/.test(value);
 
-export const isInvalidPrefix = value => !value || !/^[0-9]{3}$/.test(value);
+export const isValidPrefix = value => value && /^[0-9]{3}$/.test(value);

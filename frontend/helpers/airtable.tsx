@@ -1,5 +1,5 @@
 import { base } from '@airtable/blocks';
-import { isInvalidIBAN, isInvalidBIC, isInvalidICS, isInvalidPrefix } from './validations';
+import { isValidIBAN, isValidBIC, isValidICS, isValidPrefix } from './validations';
 import { throwValidationError, appendAndThrow } from './utils';
 import {
   CONFIG_TABLE_ID,
@@ -24,10 +24,10 @@ const validateSingleRecordInConfig = (queryResult) => {
 const validateConfigContent = (data) => {
   const errors = []
   if (data.creditorName.length > 70) errors.push('le nom du créancier doit contenir au maximum 70 caractères,')
-  if (isInvalidICS(data.ics)) errors.push('l\'ICS est invalide,')
-  if (isInvalidIBAN(data.creditorIBAN)) errors.push('l\'IBAN est invalide,')
-  if (isInvalidBIC(data.creditorBIC)) errors.push('le BIC est invalide,')
-  if (isInvalidPrefix(data.creditorPrefix)) errors.push('le préfixe doit contenir exactement trois chiffres,')
+  if (!isValidICS(data.ics)) errors.push('l\'ICS est invalide,')
+  if (!isValidIBAN(data.creditorIBAN)) errors.push('l\'IBAN est invalide,')
+  if (!isValidBIC(data.creditorBIC)) errors.push('le BIC est invalide,')
+  if (!isValidPrefix(data.creditorPrefix)) errors.push('le préfixe doit contenir exactement trois chiffres,')
 
   if (errors.length) {
     throwValidationError(['Erreur(s) dans la table CONFIGURATIONS:', ...errors].join(' '));
