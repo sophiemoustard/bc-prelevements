@@ -7,7 +7,7 @@ const NiInput = ({value, label, onChange, type = null, required = false }) => (
       <Text style={style.text}>{label}</Text>
       {required && <Text style={style.required}>*</Text>}
     </Box>
-    <Input value={value} onChange={onChange} style={style.input} type={type} />
+    <Input value={value.toString()} onChange={onChange} style={style.input} type={type} />
   </>
 );
 

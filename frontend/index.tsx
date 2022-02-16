@@ -3,6 +3,7 @@ import React, { useState, useReducer } from 'react';
 import NiInput from './components/form/input';
 import { downloadSEPAXml } from './helpers/sepa';
 import { errorReducer, initialErrorState, SET_ERROR, RESET_ERROR } from './reducers/error';
+import { INTERNAL_ERROR_MESSAGE, VALIDATION_ERROR } from './data/constants'
 
 const App = () => {
   const [amounts, setAmounts] = useState({ rent: 1, rentalExpenses: 1, currentExpenses: 1 });
@@ -15,7 +16,9 @@ const App = () => {
     try {
       await downloadSEPAXml()
     } catch (e) {
-      dispatchError({ type: SET_ERROR, payload: e.message });
+      console.error(e);
+      if (e.name === VALIDATION_ERROR) dispatchError({ type: SET_ERROR, payload: e.message });
+      else dispatchError({ type: SET_ERROR, payload: INTERNAL_ERROR_MESSAGE });
     }
   }
 

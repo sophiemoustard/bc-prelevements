@@ -1,6 +1,6 @@
 import { base } from '@airtable/blocks';
 import { isInvalidIBAN, isInvalidBIC, isInvalidICS, isInvalidPrefix } from './validations';
-import { throwValidationError } from './utils';
+import { throwValidationError, appendAndThrow } from './utils';
 import {
   CONFIG_TABLE_ID,
   CREDITOR_NAME_FIELD_ID,
@@ -14,7 +14,6 @@ import {
   BIC_FIELD_ID,
   ICS_FIELD_ID,
 } from '../../.env/models';
-import { INTERNAL_ERROR } from '../data/constants';
 
 const validateSingleRecordInConfig = (queryResult) => {
   if (queryResult.records.length !== 1) {
@@ -54,10 +53,7 @@ export const getConfigData = async () => {
     
     return configs;
   } catch (e) {
-    console.error('Error: something went wrong during extraction of table CONFIGURATIONS.');
-    console.error(e);
-    if (e.name === 'validation error') throw e;
-    throw INTERNAL_ERROR;
+    appendAndThrow(e, 'error during extraction of configuration table');
   } finally {
     if (queryResult && queryResult.isDataLoaded) queryResult.unloadData();
   }

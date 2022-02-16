@@ -1,6 +1,7 @@
 import { downloadXML } from './files'
 import dayjs from './dayjs';
 import { getConfigData, getRoommatesData } from './airtable';
+import { appendAndThrow } from './utils';
 
 
 export const createXMLDocument = () => ({
@@ -57,28 +58,32 @@ export const addTransactionInfo = (data) => {
 };
 
 export const downloadSEPAXml = async () => {
-  const configData = await getConfigData();
-  const roommatesData = await getRoommatesData();
-  const formattedRoommatesData = roommatesData.map(rm => ({
-    _id: 'id',
-    number: 'REG1234567',
-    netInclTaxes: '80',
-    rum: rm.debitorRUM,
-    customerInfo: { payment: { bic: rm.debitorBIC, bankAccountOwner: rm.debitorName, iban: rm.debitorIBAN } }
-  }));
-  const xmlContent = createXMLDocument();
+  try {
+    const configData = await getConfigData();
+    const roommatesData = await getRoommatesData();
+    const formattedRoommatesData = roommatesData.map(rm => ({
+      _id: 'id',
+      number: 'REG1234567',
+      netInclTaxes: '80',
+      rum: rm.debitorRUM,
+      customerInfo: { payment: { bic: rm.debitorBIC, bankAccountOwner: rm.debitorName, iban: rm.debitorIBAN } }
+    }));
+    const xmlContent = createXMLDocument();
+  
+    xmlContent.Document.CstmrDrctDbtInitn.GrpHdr = generateSEPAHeader({
+      sepaId: 'MSG123456789G',
+      createdDate: '2022-01-20',
+      transactionsCount: 32,
+      totalSum: 11,
+      creditorName: configData.creditorName,
+      ics: configData.ics,
+    });
 
-  xmlContent.Document.CstmrDrctDbtInitn.GrpHdr = generateSEPAHeader({
-    sepaId: 'MSG123456789G',
-    createdDate: '2022-01-20',
-    transactionsCount: 32,
-    totalSum: 11,
-    creditorName: configData.creditorName,
-    ics: configData.ics,
-  });
-
-  xmlContent.Document.CstmrDrctDbtInitn.PmtInf = addTransactionInfo(formattedRoommatesData);
-
-  const filename = `prelevements_biens_communs_${dayjs().format('YYYY-MM-DD_HH-mm')}.xml`;
-  return downloadXML(xmlContent, filename)
+    xmlContent.Document.CstmrDrctDbtInitn.PmtInf = addTransactionInfo(formattedRoommatesData);
+  
+    const filename = `prelevements_biens_communs_${dayjs().format('YYYY-MM-DD_HH-mm')}.xml`;
+    return downloadXML(xmlContent, filename)
+  } catch (e) {
+    appendAndThrow(e, 'error during generation of sepa file');
+  }
 }
