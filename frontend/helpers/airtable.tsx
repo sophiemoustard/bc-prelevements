@@ -15,13 +15,13 @@ import {
   ICS_FIELD_ID,
 } from '../../.env/models';
 
-const validateSingleRecordInConfig = (queryResult) => {
+const validateConfigTableLength = (queryResult) => {
   if (queryResult.records.length !== 1) {
     throwValidationError('Erreur dans la table CONFIGURATIONS: cette table doit contenir une et une seule ligne.')
   }
 }
 
-const validateConfigContent = (data) => {
+const validateConfigTableContent = (data) => {
   const errors = []
   if (data.creditorName.length > 70) errors.push('le nom du créancier doit contenir au maximum 70 caractères,')
   if (!isValidICS(data.ics)) errors.push('l\'ICS est invalide,')
@@ -39,7 +39,7 @@ export const getConfigData = async () => {
   try {
     const configTable = base.getTable(CONFIG_TABLE_ID);
     const queryResult = await configTable.selectRecordsAsync();
-    validateSingleRecordInConfig(queryResult);
+    validateConfigTableLength(queryResult);
 
     const configRecord = queryResult.records[0];
     const configs = {
@@ -49,7 +49,7 @@ export const getConfigData = async () => {
       creditorBIC: configRecord.getCellValue(CREDITOR_BIC_FIELD_ID),
       creditorPrefix: configRecord.getCellValue(CREDITOR_PREFIX_FIELD_ID),
     }
-    validateConfigContent(configs)
+    validateConfigTableContent(configs)
     
     return configs;
   } catch (e) {
