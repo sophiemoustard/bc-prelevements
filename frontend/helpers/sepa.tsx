@@ -1,6 +1,6 @@
 import { downloadXML } from './files'
 import dayjs from './dayjs';
-import { getConfig, getRoommatesData } from './airtable';
+import { getConfigData, getRoommatesData } from './airtable';
 
 
 export const createXMLDocument = () => ({
@@ -10,10 +10,9 @@ export const createXMLDocument = () => ({
     '@xsi:schemaLocation': 'urn:iso:std:iso:20022:tech:xsd:pain.008.001.02 pain.008.001.02.xsd',
     CstmrDrctDbtInitn: {
       GrpHdr: {},
-      PmtInf: [],
-    },
-    PmtInf: {
-      DrctDbtTxInf: [],
+      PmtInf: {
+        DrctDbtTxInf: [],
+      },
     },
   },
 });
@@ -58,7 +57,7 @@ export const addTransactionInfo = (data) => {
 };
 
 export const downloadSEPAXml = async () => {
-  const configData = await getConfig();
+  const configData = await getConfigData();
   const roommatesData = await getRoommatesData();
   const formattedRoommatesData = roommatesData.map(rm => ({
     _id: 'id',
@@ -78,7 +77,7 @@ export const downloadSEPAXml = async () => {
     ics: configData.ics,
   });
 
-  xmlContent.Document.PmtInf = addTransactionInfo(formattedRoommatesData);
+  xmlContent.Document.CstmrDrctDbtInitn.PmtInf = addTransactionInfo(formattedRoommatesData);
 
   const filename = `prelevements_biens_communs_${dayjs().format('YYYY-MM-DD_HH-mm')}.xml`;
   return downloadXML(xmlContent, filename)

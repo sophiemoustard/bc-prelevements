@@ -13,7 +13,7 @@ import {
   ICS_FIELD_ID,
 } from '../../.env/models';
 
-export const getConfig = async () => {
+export const getConfigData = async () => {
   const configTable = base.getTable(CONFIG_TABLE_ID);
   const queryResult = await configTable.selectRecordsAsync();
   const configRecord = queryResult.records[0];
