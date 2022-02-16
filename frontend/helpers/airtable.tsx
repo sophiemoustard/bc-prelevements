@@ -13,7 +13,7 @@ import {
   RUM_FIELD_ID,
   BIC_FIELD_ID,
   ICS_FIELD_ID,
-} from '../../.env/models';
+} from '../data/constants';
 
 const validateConfigTableLength = (queryResult) => {
   if (queryResult.records.length !== 1) {
