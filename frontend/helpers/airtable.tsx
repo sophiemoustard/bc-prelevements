@@ -1,5 +1,5 @@
 import { base } from '@airtable/blocks';
-import { isValidIBAN, isValidBIC, isValidICS, isValidPrefix } from './validations';
+import { isValidIBAN, isValidBIC, isValidICS, isValidPrefix, isValidName } from './validations';
 import { throwValidationError, addMessageAndThrow } from './errors';
 import {
   CONFIG_TABLE_ID,
@@ -23,7 +23,7 @@ const validateConfigTableLength = (queryResult) => {
 
 const validateConfigTableContent = (data) => {
   const errors = [];
-  if (data.creditorName.length > 70) errors.push('le nom du créancier doit contenir au maximum 70 caractères,');
+  if (!isValidName(data.creditorName)) errors.push('le nom du créancier doit contenir au maximum 70 caractères,');
   if (!isValidICS(data.ics)) errors.push('l\'ICS est invalide,');
   if (!isValidIBAN(data.creditorIBAN)) errors.push('l\'IBAN est invalide,');
   if (!isValidBIC(data.creditorBIC)) errors.push('le BIC est invalide,');
