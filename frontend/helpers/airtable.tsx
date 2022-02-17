@@ -1,6 +1,7 @@
 import { base } from '@airtable/blocks';
 import { isValidIBAN, isValidBIC, isValidICS, isValidPrefix, isValidName } from './validations';
 import { throwValidationError, addMessageAndThrow } from './errors';
+import dayjs from 'dayjs';
 import {
   CONFIG_TABLE_ID,
   CREDITOR_NAME_FIELD_ID,
@@ -13,6 +14,15 @@ import {
   RUM_FIELD_ID,
   BIC_FIELD_ID,
   ICS_FIELD_ID,
+  HISTORY_TABLE,
+  HISTORY_DEBITOR_NAME_FIELD_ID,
+  HISTORY_TRANSACTION_NUMBER_FIELD_ID,
+  HISTORY_TRANSACTION_ID_FIELD_ID,
+  HISTORY_AMOUNT_FIELD_ID,
+  HISTORY_RUM_FIELD_ID,
+  HISTORY_IBAN_FIELD_ID,
+  HISTORY_DATE_FIELD_ID,
+  HISTORY_TYPE_FIELD_ID,
 } from '../data/constants';
 
 const validateConfigTableLength = (queryResult) => {
@@ -72,4 +82,34 @@ export const getRoommatesData = async () => {
 
   queryResult.unloadData();
   return roommatesData;
+};
+
+export const createHistories = async (amounts) => {
+  let rentTransactions = [];
+  let rentalExpenseTransactions = [];
+  let currentExpenseTransations = [];
+
+  const roommatesData = await getRoommatesData();
+  const historiesTable = base.getTable(HISTORY_TABLE);
+
+  for (const roommate of roommatesData) {
+    for (const nature of Object.keys(amounts)) {
+      const historyData = {
+        [historiesTable.getFieldById(HISTORY_DEBITOR_NAME_FIELD_ID).name] : roommate.debitorName,
+        [historiesTable.getFieldById(HISTORY_TRANSACTION_NUMBER_FIELD_ID).name]: '09876',
+        [historiesTable.getFieldById(HISTORY_TRANSACTION_ID_FIELD_ID).name]: 'id',
+        [historiesTable.getFieldById(HISTORY_AMOUNT_FIELD_ID).name]: amounts[nature],
+        [historiesTable.getFieldById(HISTORY_RUM_FIELD_ID).name]: roommate.debitorRUM,
+        [historiesTable.getFieldById(HISTORY_IBAN_FIELD_ID).name]: roommate.debitorIBAN,
+        [historiesTable.getFieldById(HISTORY_DATE_FIELD_ID).name]: dayjs().toISOString(),
+        [historiesTable.getFieldById(HISTORY_TYPE_FIELD_ID).name]: nature,
+      };
+
+      await historiesTable.createRecordAsync(historyData);
+
+      if (nature === 'rent') rentTransactions.push(historyData);
+      else if (nature === 'rentalExpenses') rentalExpenseTransactions.push(historyData);
+      currentExpenseTransations.push(historyData);
+    }
+  }
 };
