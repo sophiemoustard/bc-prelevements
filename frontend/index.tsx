@@ -20,7 +20,7 @@ const App = () => {
       if (e.name === VALIDATION_ERROR) dispatchError({ type: SET_ERROR, payload: e.message });
       else dispatchError({ type: SET_ERROR, payload: INTERNAL_ERROR_MESSAGE });
     }
-  }
+  };
 
   const setAmountField = (key) => (e) => { setAmounts({ ...amounts, [key]: e.target.value }); };
   return (
@@ -41,6 +41,7 @@ const style = {
     color: colors.RED,
     fontSize: 14,
     fontStyle: 'italic',
+    marginTop: 16,
   }
 };
 

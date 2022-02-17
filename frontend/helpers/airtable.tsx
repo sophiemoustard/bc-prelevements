@@ -17,22 +17,22 @@ import {
 
 const validateConfigTableLength = (queryResult) => {
   if (queryResult.records.length !== 1) {
-    throwValidationError('Erreur dans la table CONFIGURATIONS: cette table doit contenir une et une seule ligne.')
+    throwValidationError('Erreur dans la table CONFIGURATIONS: cette table doit contenir une et une seule ligne.');
   }
-}
+};
 
 const validateConfigTableContent = (data) => {
-  const errors = []
-  if (data.creditorName.length > 70) errors.push('le nom du créancier doit contenir au maximum 70 caractères,')
-  if (!isValidICS(data.ics)) errors.push('l\'ICS est invalide,')
-  if (!isValidIBAN(data.creditorIBAN)) errors.push('l\'IBAN est invalide,')
-  if (!isValidBIC(data.creditorBIC)) errors.push('le BIC est invalide,')
-  if (!isValidPrefix(data.creditorPrefix)) errors.push('le préfixe doit contenir exactement trois chiffres,')
+  const errors = [];
+  if (data.creditorName.length > 70) errors.push('le nom du créancier doit contenir au maximum 70 caractères,');
+  if (!isValidICS(data.ics)) errors.push('l\'ICS est invalide,');
+  if (!isValidIBAN(data.creditorIBAN)) errors.push('l\'IBAN est invalide,');
+  if (!isValidBIC(data.creditorBIC)) errors.push('le BIC est invalide,');
+  if (!isValidPrefix(data.creditorPrefix)) errors.push('le préfixe doit contenir exactement trois chiffres,');
 
   if (errors.length) {
     throwValidationError(['Erreur(s) dans la table CONFIGURATIONS:', ...errors].join(' '));
   }
-}
+};
 
 export const getConfigData = async () => {
   let queryResult;
@@ -49,7 +49,7 @@ export const getConfigData = async () => {
       creditorBIC: configRecord.getCellValue(CREDITOR_BIC_FIELD_ID),
       creditorPrefix: configRecord.getCellValue(CREDITOR_PREFIX_FIELD_ID),
     }
-    validateConfigTableContent(configs)
+    validateConfigTableContent(configs);
     
     return configs;
   } catch (e) {
@@ -57,7 +57,7 @@ export const getConfigData = async () => {
   } finally {
     if (queryResult && queryResult.isDataLoaded) queryResult.unloadData();
   }
-}
+};
 
 export const getRoommatesData = async () => {
   const roommatesTable = base.getTable(ROOMMATES_TABLE_ID);

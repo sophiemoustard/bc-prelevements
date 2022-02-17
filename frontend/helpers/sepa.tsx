@@ -82,8 +82,8 @@ export const downloadSEPAXml = async () => {
     xmlContent.Document.CstmrDrctDbtInitn.PmtInf = addTransactionInfo(formattedRoommatesData);
   
     const filename = `prelevements_biens_communs_${dayjs().format('YYYY-MM-DD_HH-mm')}.xml`;
-    return downloadXML(xmlContent, filename)
+    return downloadXML(xmlContent, filename);
   } catch (e) {
     addMessageAndThrow(e, 'error during generation of sepa file');
   }
-}
+};
