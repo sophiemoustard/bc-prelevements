@@ -23,6 +23,13 @@ import {
   HISTORY_IBAN_FIELD_ID,
   HISTORY_DATE_FIELD_ID,
   HISTORY_TYPE_FIELD_ID,
+  RENT_FIELD_ID,
+  RENTAL_EXPENSES_FIELD_ID,
+  CURRENT_EXPENSES_FIELD_ID,
+  AMOUNTS_NATURE,
+  CURRENT_EXPENSES,
+  RENT,
+  RENTAL_EXPENSES,
 } from '../data/constants';
 
 const validateConfigTableLength = (queryResult) => {
@@ -89,27 +96,43 @@ export const createHistories = async (amounts) => {
   let rentalExpenseTransactions = [];
   let currentExpenseTransations = [];
 
-  const roommatesData = await getRoommatesData();
-  const historiesTable = base.getTable(HISTORY_TABLE);
+  try {
+    const historiesTable = base.getTable(HISTORY_TABLE);
 
-  for (const roommate of roommatesData) {
-    for (const nature of Object.keys(amounts)) {
-      const historyData = {
-        [historiesTable.getFieldById(HISTORY_DEBITOR_NAME_FIELD_ID).name] : roommate.debitorName,
-        [historiesTable.getFieldById(HISTORY_TRANSACTION_NUMBER_FIELD_ID).name]: '09876',
-        [historiesTable.getFieldById(HISTORY_TRANSACTION_ID_FIELD_ID).name]: 'id',
-        [historiesTable.getFieldById(HISTORY_AMOUNT_FIELD_ID).name]: amounts[nature],
-        [historiesTable.getFieldById(HISTORY_RUM_FIELD_ID).name]: roommate.debitorRUM,
-        [historiesTable.getFieldById(HISTORY_IBAN_FIELD_ID).name]: roommate.debitorIBAN,
-        [historiesTable.getFieldById(HISTORY_DATE_FIELD_ID).name]: dayjs().toISOString(),
-        [historiesTable.getFieldById(HISTORY_TYPE_FIELD_ID).name]: nature,
-      };
+    const roommatesData = await getRoommatesData();
+    const configData = await getConfigData();
 
-      await historiesTable.createRecordAsync(historyData);
+    const natures = [
+      {label: configData.rent, value: RENT },
+      {label: configData.rentalExpenses, value: RENTAL_EXPENSES },
+      {label: configData.currentExpenses, value: CURRENT_EXPENSES },
+    ];
 
-      if (nature === 'rent') rentTransactions.push(historyData);
-      else if (nature === 'rentalExpenses') rentalExpenseTransactions.push(historyData);
-      currentExpenseTransations.push(historyData);
+
+    for (const roommate of roommatesData) {
+      for (const nature of AMOUNTS_NATURE) {
+        const historyData = {
+          [historiesTable.getFieldById(HISTORY_DEBITOR_NAME_FIELD_ID).name] : roommate.debitorName,
+          [historiesTable.getFieldById(HISTORY_TRANSACTION_NUMBER_FIELD_ID).name]: '2354657',
+          [historiesTable.getFieldById(HISTORY_TRANSACTION_ID_FIELD_ID).name]: 'id',
+          [historiesTable.getFieldById(HISTORY_AMOUNT_FIELD_ID).name]: amounts[nature],
+          [historiesTable.getFieldById(HISTORY_RUM_FIELD_ID).name]: roommate.debitorRUM,
+          [historiesTable.getFieldById(HISTORY_IBAN_FIELD_ID).name]: roommate.debitorIBAN,
+          [historiesTable.getFieldById(HISTORY_DATE_FIELD_ID).name]: dayjs().toISOString(),
+          [historiesTable.getFieldById(HISTORY_TYPE_FIELD_ID).name]: natures.find(item => item.value === nature).label,
+        };
+
+        await historiesTable.createRecordAsync(historyData);
+
+        if (nature === 'rent') rentTransactions.push(historyData);
+        else if (nature === 'rentalExpenses') rentalExpenseTransactions.push(historyData);
+        currentExpenseTransations.push(historyData);
+      }
     }
+
+    return {rentTransactions, rentalExpenseTransactions, currentExpenseTransations };
+  } catch (e) {
+    console.error(e);
   }
+  //   addMessageAndThrow(e, 'error during creation of histories table');
 };
