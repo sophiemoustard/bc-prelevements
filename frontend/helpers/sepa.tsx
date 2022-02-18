@@ -57,6 +57,10 @@ export const addTransactionInfo = (data) => {
   return obj;
 };
 
+export const formatTransactionNumber = (companyPrefixNumber, prefix, transactionNumber) => {
+  return `REG-${companyPrefixNumber}${prefix}${transactionNumber.toString().padStart(5, '0')}`;
+};
+
 export const downloadSEPAXml = async () => {
   try {
     const configData = await getConfigData();
