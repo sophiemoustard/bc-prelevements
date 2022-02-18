@@ -160,12 +160,12 @@ export const createHistories = async (amounts) => {
 
         if (nature === RENT) rentTransactions.push(historyData);
         else if (nature === RENTAL_EXPENSES) rentalExpenseTransactions.push(historyData);
-        currentExpenseTransations.push(historyData);
+        else currentExpenseTransations.push(historyData);
         transactionMonthNumber += 1;
       }
     }
 
-    return {rentTransactions, rentalExpenseTransactions, currentExpenseTransations };
+    return { rentTransactions, rentalExpenseTransactions, currentExpenseTransations };
   } catch (e) {
     addMessageAndThrow(e, 'error during creation of history table');
   }
