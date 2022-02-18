@@ -1,8 +1,7 @@
 import { base } from '@airtable/blocks';
+import dayjs from './dayjs';
 import { isValidIBAN, isValidBIC, isValidICS, isValidPrefix, isValidName } from './validations';
 import { throwValidationError, addMessageAndThrow } from './errors';
-import dayjs from 'dayjs';
-import ObjectID from 'bson-objectid';
 import {
   CONFIG_TABLE_ID,
   CREDITOR_NAME_FIELD_ID,
@@ -15,15 +14,6 @@ import {
   RUM_FIELD_ID,
   BIC_FIELD_ID,
   ICS_FIELD_ID,
-  HISTORY_TABLE,
-  HISTORY_DEBITOR_NAME_FIELD_ID,
-  HISTORY_TRANSACTION_NUMBER_FIELD_ID,
-  HISTORY_TRANSACTION_ID_FIELD_ID,
-  HISTORY_AMOUNT_FIELD_ID,
-  HISTORY_RUM_FIELD_ID,
-  HISTORY_IBAN_FIELD_ID,
-  HISTORY_DATE_FIELD_ID,
-  HISTORY_TYPE_FIELD_ID,
   RENT_FIELD_ID,
   RENTAL_EXPENSES_FIELD_ID,
   CURRENT_EXPENSES_FIELD_ID,
@@ -31,8 +21,12 @@ import {
   CURRENT_EXPENSES,
   RENT,
   RENTAL_EXPENSES,
+  HISTORY_TABLE,
+  HISTORY_DATE_FIELD_ID,
+  HISTORY_RUM_FIELD_ID,
 } from '../data/constants';
 import { formatTransactionNumber } from './sepa';
+  
 
 const validateConfigTableLength = (queryResult) => {
   if (queryResult.records.length !== 1) {
@@ -67,9 +61,9 @@ export const getConfigData = async () => {
       creditorIBAN: configRecord.getCellValue(CREDITOR_IBAN_FIELD_ID),
       creditorBIC: configRecord.getCellValue(CREDITOR_BIC_FIELD_ID),
       creditorPrefix: configRecord.getCellValue(CREDITOR_PREFIX_FIELD_ID),
-      rent: configRecord.getCellValue(RENT_FIELD_ID),
-      rentalExpenses: configRecord.getCellValue(RENTAL_EXPENSES_FIELD_ID),
-      currentExpenses: configRecord.getCellValue(CURRENT_EXPENSES_FIELD_ID),
+      rentTransactionLabel: configRecord.getCellValue(RENT_FIELD_ID),
+      rentalExpensesLabel: configRecord.getCellValue(RENTAL_EXPENSES_FIELD_ID),
+      currentExpensesLabel: configRecord.getCellValue(CURRENT_EXPENSES_FIELD_ID),
     }
     validateConfigTableContent(configs);
     
@@ -96,78 +90,46 @@ export const getRoommatesData = async () => {
   return roommatesData;
 };
 
-export const getTransactionsHistoryForCurrentMonthAndRUMs = async (month) => {
-  let queryResult;
-  let transactionMonthNumber = 1;
-  let RUMs = [];
+export const getTableFieldsIdsAndLabel = (tableId) => {
+  let table 
   try {
-    const transactionsHistoryTable = base.getTable(HISTORY_TABLE);
-    queryResult = await transactionsHistoryTable.selectRecordsAsync();
+    table = base.getTable(tableId);
+    const fields = table.fields.map(field => { return { name: field.name, id: field.id }; });
 
-    const formattedHistories = queryResult.records.map(record => ({
+    return fields;
+  } catch (e) {
+    addMessageAndThrow(e, `error during extraction of ${table.name} table`);
+  }
+};
+
+export const getHistories = async () => {
+  let queryResult;
+  try {
+    const histories = base.getTable(HISTORY_TABLE);
+    const queryResult = await histories.selectRecordsAsync();
+
+    const historiesData = queryResult.records.map(record => ({
       date: record.getCellValue(HISTORY_DATE_FIELD_ID),
-      RUM: record.getCellValue(HISTORY_RUM_FIELD_ID),
+      RUM: record.getCellValue(HISTORY_RUM_FIELD_ID)
     }));
-
-    for (const history of formattedHistories) {
-      if (dayjs(history.date).get('month') === month) transactionMonthNumber += 1;
-      if (!RUMs.includes(history.RUM)) RUMs.push(history.RUM);
-    }
-
-    return { transactionMonthNumber, RUMs };
+  
+  return historiesData;
   } catch (e) {
     addMessageAndThrow(e, 'error during extraction of history table');
   } finally {
     if (queryResult && queryResult.isDataLoaded) queryResult.unloadData();
   }
+  
 };
 
-export const formatTransactionsAndCreateHistories = async (amounts) => {
-  let rentTransactions = [];
-  let rentalExpenseTransactions = [];
-  let currentExpenseTransations = [];
-  let transactionNumber;
+
+export const addRecord = async (tableId, data) => {
+  let table;
   try {
-    const transactionsHistoryTable = base.getTable(HISTORY_TABLE);
-    const roommatesData = await getRoommatesData();
-    const configData = await getConfigData();
+    table = base.getTable(tableId);
 
-    const natures = [
-      {label: configData.rent, value: RENT },
-      {label: configData.rentalExpenses, value: RENTAL_EXPENSES },
-      {label: configData.currentExpenses, value: CURRENT_EXPENSES },
-    ];
-    const date = dayjs().toISOString();
-    const month = dayjs(date).get('month');
-    const prefixDate = dayjs(date).format('MMYY');
-    let { transactionMonthNumber } = await getTransactionsHistoryForCurrentMonthAndRUMs(month);
-
-    for (const roommate of roommatesData) {
-      for (const nature of AMOUNTS_NATURE) {
-        transactionNumber = formatTransactionNumber(configData.creditorPrefix, prefixDate, transactionMonthNumber);
-        const historyData = {
-          [transactionsHistoryTable.getFieldById(HISTORY_DEBITOR_NAME_FIELD_ID).name] : roommate.debitorName,
-          [transactionsHistoryTable.getFieldById(HISTORY_TRANSACTION_NUMBER_FIELD_ID).name]: transactionNumber,
-          [transactionsHistoryTable.getFieldById(HISTORY_TRANSACTION_ID_FIELD_ID).name]: ObjectID().toHexString(),
-          [transactionsHistoryTable.getFieldById(HISTORY_AMOUNT_FIELD_ID).name]: amounts[nature],
-          [transactionsHistoryTable.getFieldById(HISTORY_RUM_FIELD_ID).name]: roommate.debitorRUM,
-          [transactionsHistoryTable.getFieldById(HISTORY_IBAN_FIELD_ID).name]: roommate.debitorIBAN,
-          [transactionsHistoryTable.getFieldById(HISTORY_DATE_FIELD_ID).name]: date,
-          [transactionsHistoryTable.getFieldById(HISTORY_TYPE_FIELD_ID).name]: natures.find(item => item.value === nature).label,
-        };
-
-        await transactionsHistoryTable.createRecordAsync(historyData);
-
-        if (nature === RENT) rentTransactions.push(historyData);
-        else if (nature === RENTAL_EXPENSES) rentalExpenseTransactions.push(historyData);
-        else currentExpenseTransations.push(historyData);
-        transactionMonthNumber += 1;
-      }
-    }
-
-    return { rentTransactions, rentalExpenseTransactions, currentExpenseTransations };
+    await table.createRecordAsync(data);
   } catch (e) {
-    addMessageAndThrow(e, 'error during creation of history table');
+    addMessageAndThrow(e, `error during creation of ${table.name} table`);
   }
 };
-
