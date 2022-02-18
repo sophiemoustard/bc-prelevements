@@ -1,6 +1,5 @@
 import { base } from '@airtable/blocks';
-import dayjs from './dayjs';
-import { isValidIBAN, isValidBIC, isValidICS, isValidPrefix, isValidName } from './validations';
+import { isValidIBAN, isValidBIC, isValidICS, isValidPrefix, isValidName, isValidTransactionNature } from './validations';
 import { throwValidationError, addMessageAndThrow } from './errors';
 import {
   CONFIG_TABLE_ID,
@@ -41,6 +40,12 @@ const validateConfigTableContent = (data) => {
   if (!isValidIBAN(data.creditorIBAN)) errors.push('l\'IBAN est invalide,');
   if (!isValidBIC(data.creditorBIC)) errors.push('le BIC est invalide,');
   if (!isValidPrefix(data.creditorPrefix)) errors.push('le préfixe doit contenir exactement trois chiffres,');
+  if (
+    !isValidTransactionNature(data.rentTransactionLabel) ||
+    !isValidTransactionNature(data.rentalExpensesLabel) ||
+    !isValidTransactionNature(data.currentExpensesLabel)) {
+      errors.push('le libellé doit contenir au maximum 140 caractères,');
+  }
 
   if (errors.length) {
     throwValidationError(['Erreur(s) dans la table CONFIGURATIONS:', ...errors].join(' '));
