@@ -2,6 +2,7 @@ import { base } from '@airtable/blocks';
 import { isValidIBAN, isValidBIC, isValidICS, isValidPrefix, isValidName } from './validations';
 import { throwValidationError, addMessageAndThrow } from './errors';
 import dayjs from 'dayjs';
+import ObjectID from 'bson-objectid';
 import {
   CONFIG_TABLE_ID,
   CREDITOR_NAME_FIELD_ID,
@@ -144,7 +145,7 @@ export const createHistories = async (amounts) => {
         const historyData = {
           [transactionsHistoryTable.getFieldById(HISTORY_DEBITOR_NAME_FIELD_ID).name] : roommate.debitorName,
           [transactionsHistoryTable.getFieldById(HISTORY_TRANSACTION_NUMBER_FIELD_ID).name]: transactionNumber,
-          [transactionsHistoryTable.getFieldById(HISTORY_TRANSACTION_ID_FIELD_ID).name]: 'id',
+          [transactionsHistoryTable.getFieldById(HISTORY_TRANSACTION_ID_FIELD_ID).name]: ObjectID().toHexString(),
           [transactionsHistoryTable.getFieldById(HISTORY_AMOUNT_FIELD_ID).name]: amounts[nature],
           [transactionsHistoryTable.getFieldById(HISTORY_RUM_FIELD_ID).name]: roommate.debitorRUM,
           [transactionsHistoryTable.getFieldById(HISTORY_IBAN_FIELD_ID).name]: roommate.debitorIBAN,

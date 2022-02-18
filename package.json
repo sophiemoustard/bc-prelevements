@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "@airtable/blocks": "1.10.2",
+    "bson-objectid": "^2.0.2",
     "dayjs": "^1.10.7",
     "ibantools": "^4.1.4",
     "react": "^16.9.0",
