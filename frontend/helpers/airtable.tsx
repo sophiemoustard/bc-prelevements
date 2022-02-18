@@ -122,7 +122,7 @@ export const getTransactionsHistoryForCurrentMonthAndRUMs = async (month) => {
   }
 };
 
-export const createHistories = async (amounts) => {
+export const formatTransactionsAndCreateHistories = async (amounts) => {
   let rentTransactions = [];
   let rentalExpenseTransactions = [];
   let currentExpenseTransations = [];

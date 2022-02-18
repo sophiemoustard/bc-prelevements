@@ -1,7 +1,7 @@
 import { initializeBlock, Button, Text, colors } from '@airtable/blocks/ui';
 import React, { useState, useReducer } from 'react';
 import NiInput from './components/form/input';
-import { createHistories } from './helpers/airtable';
+import { formatTransactionsAndCreateHistories } from './helpers/airtable';
 import { downloadSEPAXml } from './helpers/sepa';
 import { errorReducer, initialErrorState, SET_ERROR, RESET_ERROR } from './reducers/error';
 import { INTERNAL_ERROR_MESSAGE, VALIDATION_ERROR } from './data/constants'
@@ -15,7 +15,7 @@ const App = () => {
   const onPressButton = async () => {
     dispatchError({ type: RESET_ERROR });
     try {
-      await createHistories(amounts);
+      await formatTransactionsAndCreateHistories(amounts);
       await downloadSEPAXml()
     } catch (e) {
       console.error(e);
