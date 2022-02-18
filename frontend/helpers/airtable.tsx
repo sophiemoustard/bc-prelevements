@@ -97,8 +97,8 @@ export const getTransactionsHistoryForCurrentMonthAndRUMs = async (month) => {
   let transactionMonthNumber = 1;
   let RUMs = [];
   try {
-    const historiesTable = base.getTable(HISTORY_TABLE);
-    queryResult = await historiesTable.selectRecordsAsync();
+    const transactionsHistoryTable = base.getTable(HISTORY_TABLE);
+    queryResult = await transactionsHistoryTable.selectRecordsAsync();
 
     const formattedHistories = queryResult.records.map(record => ({
       date: record.getCellValue(HISTORY_DATE_FIELD_ID),
@@ -124,7 +124,7 @@ export const createHistories = async (amounts) => {
   let currentExpenseTransations = [];
   let transactionNumber;
   try {
-    const historiesTable = base.getTable(HISTORY_TABLE);
+    const transactionsHistoryTable = base.getTable(HISTORY_TABLE);
     const roommatesData = await getRoommatesData();
     const configData = await getConfigData();
 
@@ -142,20 +142,20 @@ export const createHistories = async (amounts) => {
       for (const nature of AMOUNTS_NATURE) {
         transactionNumber = formatTransactionNumber(configData.creditorPrefix, prefixDate, transactionMonthNumber);
         const historyData = {
-          [historiesTable.getFieldById(HISTORY_DEBITOR_NAME_FIELD_ID).name] : roommate.debitorName,
-          [historiesTable.getFieldById(HISTORY_TRANSACTION_NUMBER_FIELD_ID).name]: transactionNumber,
-          [historiesTable.getFieldById(HISTORY_TRANSACTION_ID_FIELD_ID).name]: 'id',
-          [historiesTable.getFieldById(HISTORY_AMOUNT_FIELD_ID).name]: amounts[nature],
-          [historiesTable.getFieldById(HISTORY_RUM_FIELD_ID).name]: roommate.debitorRUM,
-          [historiesTable.getFieldById(HISTORY_IBAN_FIELD_ID).name]: roommate.debitorIBAN,
-          [historiesTable.getFieldById(HISTORY_DATE_FIELD_ID).name]: dayjs().toISOString(),
-          [historiesTable.getFieldById(HISTORY_TYPE_FIELD_ID).name]: natures.find(item => item.value === nature).label,
+          [transactionsHistoryTable.getFieldById(HISTORY_DEBITOR_NAME_FIELD_ID).name] : roommate.debitorName,
+          [transactionsHistoryTable.getFieldById(HISTORY_TRANSACTION_NUMBER_FIELD_ID).name]: transactionNumber,
+          [transactionsHistoryTable.getFieldById(HISTORY_TRANSACTION_ID_FIELD_ID).name]: 'id',
+          [transactionsHistoryTable.getFieldById(HISTORY_AMOUNT_FIELD_ID).name]: amounts[nature],
+          [transactionsHistoryTable.getFieldById(HISTORY_RUM_FIELD_ID).name]: roommate.debitorRUM,
+          [transactionsHistoryTable.getFieldById(HISTORY_IBAN_FIELD_ID).name]: roommate.debitorIBAN,
+          [transactionsHistoryTable.getFieldById(HISTORY_DATE_FIELD_ID).name]: date,
+          [transactionsHistoryTable.getFieldById(HISTORY_TYPE_FIELD_ID).name]: natures.find(item => item.value === nature).label,
         };
 
-        await historiesTable.createRecordAsync(historyData);
+        await transactionsHistoryTable.createRecordAsync(historyData);
 
-        if (nature === 'rent') rentTransactions.push(historyData);
-        else if (nature === 'rentalExpenses') rentalExpenseTransactions.push(historyData);
+        if (nature === RENT) rentTransactions.push(historyData);
+        else if (nature === RENTAL_EXPENSES) rentalExpenseTransactions.push(historyData);
         currentExpenseTransations.push(historyData);
         transactionMonthNumber += 1;
       }
