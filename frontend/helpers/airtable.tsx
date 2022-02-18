@@ -67,6 +67,9 @@ export const getConfigData = async () => {
       creditorIBAN: configRecord.getCellValue(CREDITOR_IBAN_FIELD_ID),
       creditorBIC: configRecord.getCellValue(CREDITOR_BIC_FIELD_ID),
       creditorPrefix: configRecord.getCellValue(CREDITOR_PREFIX_FIELD_ID),
+      rent: configRecord.getCellValue(RENT_FIELD_ID),
+      rentalExpenses: configRecord.getCellValue(RENTAL_EXPENSES_FIELD_ID),
+      currentExpenses: configRecord.getCellValue(CURRENT_EXPENSES_FIELD_ID),
     }
     validateConfigTableContent(configs);
     
@@ -113,7 +116,7 @@ export const getTransactionsHistoryForCurrentMonthAndRUMs = async (month) => {
 
     return { transactionMonthNumber, RUMs };
   } catch (e) {
-    console.error(e);
+    addMessageAndThrow(e, 'error during extraction of history table');
   } finally {
     if (queryResult && queryResult.isDataLoaded) queryResult.unloadData();
   }
@@ -164,7 +167,7 @@ export const createHistories = async (amounts) => {
 
     return {rentTransactions, rentalExpenseTransactions, currentExpenseTransations };
   } catch (e) {
-    console.error(e, 'error during creation of histories table');
+    addMessageAndThrow(e, 'error during creation of history table');
   }
 };
 
