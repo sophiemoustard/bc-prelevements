@@ -1,5 +1,5 @@
 import { base } from '@airtable/blocks';
-import { envModelsId, prodModelsId, PROD_BASE_ID } from '../../.env/models'
+import { devModelsId, prodModelsId, PROD_BASE_ID } from '../../.env/models'
 
 
 /*
@@ -13,7 +13,7 @@ export const VALIDATION_ERROR = 'Validation error';
  ************************************************* MODEL IDS ********************************************************** 
  */
 
-const modelsId = base.id === PROD_BASE_ID ? prodModelsId : envModelsId;
+const modelsId = base.id === PROD_BASE_ID ? prodModelsId : devModelsId;
 
 // ROOM MATES TABLE
 export const ROOMMATES_TABLE_ID = modelsId.roommatesTableId;
