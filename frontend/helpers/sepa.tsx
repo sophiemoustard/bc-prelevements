@@ -1,7 +1,13 @@
 import { downloadXML } from './files'
 import dayjs from './dayjs';
 import ObjectID from 'bson-objectid';
-import { addRecord, getConfigData, getHistories, getRoommatesData, getTableFieldsIdsAndLabel } from './airtable';
+import {
+  addRecord,
+  getConfigData,
+  getFormattedTransactionsHistories,
+  getRoommatesData,
+  getTableFieldsIdsAndLabel,
+} from './airtable';
 import { addMessageAndThrow } from './errors';
 import { AMOUNTS_NATURE, CURRENT_EXPENSES, RENT, RENTAL_EXPENSES } from './constants';
 import { HISTORY_AMOUNT_FIELD_ID, HISTORY_DATE_FIELD_ID, HISTORY_DEBITOR_NAME_FIELD_ID, HISTORY_IBAN_FIELD_ID, HISTORY_RUM_FIELD_ID, HISTORY_TABLE, HISTORY_TRANSACTION_ID_FIELD_ID, HISTORY_TRANSACTION_NUMBER_FIELD_ID, HISTORY_TYPE_FIELD_ID } from '../../.env/models';
@@ -21,7 +27,7 @@ export const createXMLDocument = () => ({
   },
 });
 
-export const generateSEPAHeader = (data) => ({
+const generateSEPAHeader = (data) => ({
   MsgId: data.sepaId,
   CreDtTm: data.createdDate,
   NbOfTxs: data.transactionsCount,
@@ -32,7 +38,7 @@ export const generateSEPAHeader = (data) => ({
   },
 });
 
-export const addTransactionInfo = (data) => {
+const addTransactionInfo = (data) => {
   const obj = { DrctDbtTxInf: [] };
 
   for (const transaction of data) {
@@ -60,18 +66,18 @@ export const addTransactionInfo = (data) => {
   return obj;
 };
 
-export const formatTransactionNumber = (companyPrefixNumber, prefix, transactionNumber) => {
+const formatTransactionNumber = (companyPrefixNumber, prefix, transactionNumber) => {
   return `REG-${companyPrefixNumber}${prefix}${transactionNumber.toString().padStart(5, '0')}`;
 };
 
-const getLabel = (fields, fieldId) => fields.find(field => field.id === fieldId).name || '';
+const getFieldLabel = (fields, fieldId) => fields.find(field => field.id === fieldId).name || '';
 
-export const getTransactionsHistoryForCurrentMonthAndRUMs = async (date) => {
+const getTransactionsHistoryForCurrentMonthAndRUMs = async (date) => {
   try {
     let transactionMonthNumber = 1;
     let RUMs = [];
 
-    const histories = await getHistories();
+    const histories = await getFormattedTransactionsHistories();
 
     transactionMonthNumber = histories.map(h => h.date).filter(hdate => dayjs(hdate).isSame(date, 'month')).length
     RUMs = [...new Set(histories.map(h => h.RUM))];
@@ -82,7 +88,7 @@ export const getTransactionsHistoryForCurrentMonthAndRUMs = async (date) => {
   }
 };
 
-export const formatTransactions = async (configData, roommatesData, amounts) => {
+const formatTransactions = async (configData, roommatesData, amounts) => {
   try {
     const rentTransactions = [];
     const rentalExpenseTransactions = [];
@@ -98,6 +104,7 @@ export const formatTransactions = async (configData, roommatesData, amounts) => 
       {label: configData.currentExpensesLabel, value: CURRENT_EXPENSES },
     ];
     const date = dayjs().toISOString();
+
     const prefixDate = dayjs(date).format('MMYY');
     let { transactionMonthNumber } = await getTransactionsHistoryForCurrentMonthAndRUMs(date);
 
@@ -105,14 +112,14 @@ export const formatTransactions = async (configData, roommatesData, amounts) => 
       for (const nature of AMOUNTS_NATURE) {
         transactionNumber = formatTransactionNumber(configData.creditorPrefix, prefixDate, transactionMonthNumber);
         const historyData = {
-          [getLabel(historyTableFieldsLabel, HISTORY_DEBITOR_NAME_FIELD_ID)]: roommate.debitorName,
-          [getLabel(historyTableFieldsLabel, HISTORY_TRANSACTION_NUMBER_FIELD_ID)]: transactionNumber,
-          [getLabel(historyTableFieldsLabel, HISTORY_TRANSACTION_ID_FIELD_ID)]: ObjectID().toHexString(),
-          [getLabel(historyTableFieldsLabel, HISTORY_AMOUNT_FIELD_ID)]: amounts[nature],
-          [getLabel(historyTableFieldsLabel, HISTORY_RUM_FIELD_ID)]: roommate.debitorRUM,
-          [getLabel(historyTableFieldsLabel, HISTORY_IBAN_FIELD_ID)]: roommate.debitorIBAN,
-          [getLabel(historyTableFieldsLabel, HISTORY_DATE_FIELD_ID)]: date,
-          [getLabel(historyTableFieldsLabel, HISTORY_TYPE_FIELD_ID)]: natures.find(item => item.value === nature).label,
+          [getFieldLabel(historyTableFieldsLabel, HISTORY_DEBITOR_NAME_FIELD_ID)]: roommate.debitorName,
+          [getFieldLabel(historyTableFieldsLabel, HISTORY_TRANSACTION_NUMBER_FIELD_ID)]: transactionNumber,
+          [getFieldLabel(historyTableFieldsLabel, HISTORY_TRANSACTION_ID_FIELD_ID)]: ObjectID().toHexString(),
+          [getFieldLabel(historyTableFieldsLabel, HISTORY_AMOUNT_FIELD_ID)]: amounts[nature],
+          [getFieldLabel(historyTableFieldsLabel, HISTORY_RUM_FIELD_ID)]: roommate.debitorRUM,
+          [getFieldLabel(historyTableFieldsLabel, HISTORY_IBAN_FIELD_ID)]: roommate.debitorIBAN,
+          [getFieldLabel(historyTableFieldsLabel, HISTORY_DATE_FIELD_ID)]: date,
+          [getFieldLabel(historyTableFieldsLabel, HISTORY_TYPE_FIELD_ID)]: natures.find(item => item.value === nature).label,
         };
 
         if (nature === RENT) rentTransactions.push(historyData);
@@ -126,7 +133,7 @@ export const formatTransactions = async (configData, roommatesData, amounts) => 
 
     return { rentTransactions, rentalExpenseTransactions, currentExpenseTransations, allTransactions };
   } catch (e) {
-    addMessageAndThrow(e, 'error during creation of history table');
+    addMessageAndThrow(e, 'error when formatting transaction data');
   }
 };
 

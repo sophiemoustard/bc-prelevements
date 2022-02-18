@@ -107,11 +107,11 @@ export const getTableFieldsIdsAndLabel = (tableId) => {
   }
 };
 
-export const getHistories = async () => {
+export const getFormattedTransactionsHistories = async () => {
   let queryResult;
   try {
-    const histories = base.getTable(HISTORY_TABLE);
-    const queryResult = await histories.selectRecordsAsync();
+    const transactionsHistoryTable = base.getTable(HISTORY_TABLE);
+    queryResult = await transactionsHistoryTable.selectRecordsAsync();
 
     const historiesData = queryResult.records.map(record => ({
       date: record.getCellValue(HISTORY_DATE_FIELD_ID),
