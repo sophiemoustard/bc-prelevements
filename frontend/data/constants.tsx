@@ -7,6 +7,11 @@ import { devModelsId, prodModelsId, PROD_BASE_ID } from '../../.env/models'
  */
 export const INTERNAL_ERROR_MESSAGE = 'Une erreur interne s\'est produite, veuillez contacter l\'équipe technique.';
 export const VALIDATION_ERROR = 'Validation error';
+export const RENT = 'rent';
+export const RENTAL_EXPENSES = 'rentalExpenses';
+export const CURRENT_EXPENSES = 'currentExpenses';
+export const AMOUNTS_NATURE = [RENT, RENTAL_EXPENSES, CURRENT_EXPENSES];
+export const BATCH_SIZE = 50;
 
 
 /*

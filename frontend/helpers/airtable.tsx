@@ -23,9 +23,9 @@ import {
   HISTORY_TABLE,
   HISTORY_DATE_FIELD_ID,
   HISTORY_RUM_FIELD_ID,
+  BATCH_SIZE,
 } from '../data/constants';
 import { formatTransactionNumber } from './sepa';
-  
 
 const validateConfigTableLength = (queryResult) => {
   if (queryResult.records.length !== 1) {
@@ -117,9 +117,17 @@ export const getTransactionsHistoryData = async () => {
 export const addRecords = async (tableId, data) => {
   let table;
   try {
+    let i = 0;
     table = base.getTable(tableId);
 
-    await table.createRecordsAsync(data);
+    while (i < data.length) {
+      const dataBatch = data.slice(i, i + BATCH_SIZE);
+
+      await table.createRecordsAsync(dataBatch);
+
+      i += BATCH_SIZE;
+    }
+
   } catch (e) {
     addMessageAndThrow(e, `error during creation of ${table.name} table`);
   }
