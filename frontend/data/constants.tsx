@@ -38,3 +38,18 @@ export const ICS_FIELD_ID = modelsId.icsFieldId;
 export const CREDITOR_IBAN_FIELD_ID = modelsId.creditorIbanFieldId;
 export const CREDITOR_BIC_FIELD_ID = modelsId.creditorBicFieldId;
 export const CREDITOR_PREFIX_FIELD_ID = modelsId.creditorPrefixFieldId;
+export const RENT_FIELD_ID = modelsId.rentFieldId;
+export const RENTAL_EXPENSES_FIELD_ID = modelsId.rentalExpensesFieldId;
+export const CURRENT_EXPENSES_FIELD_ID = modelsId.currentExpensesFieldId;
+
+// // TRANSACTION HISTORY TABLE
+export const HISTORY_TABLE_ID = modelsId.historyTableId;
+export const HISTORY_DEBITOR_NAME_FIELD_ID = modelsId.historyDebitorNameFieldId;
+export const HISTORY_TRANSACTION_NUMBER_FIELD_ID = modelsId.historyTransactionNumberFieldId;
+export const HISTORY_TRANSACTION_ID_FIELD_ID = modelsId.historyTransactionIdFieldId;
+export const HISTORY_AMOUNT_FIELD_ID = modelsId.historyAmountFieldId;
+export const HISTORY_RUM_FIELD_ID = modelsId.historyRUMFieldId;
+export const HISTORY_IBAN_FIELD_ID = modelsId.historyIBANFieldId;
+export const HISTORY_DATE_FIELD_ID = modelsId.historyDateFieldId;
+export const HISTORY_TYPE_FIELD_ID = modelsId.historyTypeFieldId;
+

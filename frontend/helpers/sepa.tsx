@@ -8,18 +8,21 @@ import {
   getRoommatesData,
 } from './airtable';
 import { addMessageAndThrow } from './errors';
-import { AMOUNTS_NATURE, CURRENT_EXPENSES, RENT, RENTAL_EXPENSES } from '../data/constants';
 import {
+  AMOUNTS_NATURE,
+  CURRENT_EXPENSES,
+  RENT,
+  RENTAL_EXPENSES,
   HISTORY_AMOUNT_FIELD_ID,
   HISTORY_DATE_FIELD_ID,
   HISTORY_DEBITOR_NAME_FIELD_ID,
   HISTORY_IBAN_FIELD_ID,
   HISTORY_RUM_FIELD_ID,
-  HISTORY_TABLE,
   HISTORY_TRANSACTION_ID_FIELD_ID,
   HISTORY_TRANSACTION_NUMBER_FIELD_ID,
   HISTORY_TYPE_FIELD_ID,
-} from '../../.env/models';
+  HISTORY_TABLE_ID,
+} from '../data/constants';
 
 
 export const createXMLDocument = () => ({
@@ -165,7 +168,7 @@ export const downloadSEPAXml = async (amounts) => {
 
     const { allTransactions } = await formatTransactions(configData, roommatesData, amounts);
 
-    await addRecords(HISTORY_TABLE, allTransactions);
+    await addRecords(HISTORY_TABLE_ID, allTransactions);
   
     const filename = `prelevements_biens_communs_${dayjs().format('YYYY-MM-DD_HH-mm')}.xml`;
     return downloadXML(xmlContent, filename);

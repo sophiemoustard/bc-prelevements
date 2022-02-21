@@ -16,16 +16,11 @@ import {
   RENT_FIELD_ID,
   RENTAL_EXPENSES_FIELD_ID,
   CURRENT_EXPENSES_FIELD_ID,
-  AMOUNTS_NATURE,
-  CURRENT_EXPENSES,
-  RENT,
-  RENTAL_EXPENSES,
-  HISTORY_TABLE,
   HISTORY_DATE_FIELD_ID,
   HISTORY_RUM_FIELD_ID,
+  HISTORY_TABLE_ID,
   BATCH_SIZE,
 } from '../data/constants';
-import { formatTransactionNumber } from './sepa';
 
 const validateConfigTableLength = (queryResult) => {
   if (queryResult.records.length !== 1) {
@@ -98,7 +93,7 @@ export const getRoommatesData = async () => {
 export const getTransactionsHistoryData = async () => {
   let queryResult;
   try {
-    const transactionsHistoryTable = base.getTable(HISTORY_TABLE);
+    const transactionsHistoryTable = base.getTable(HISTORY_TABLE_ID);
     queryResult = await transactionsHistoryTable.selectRecordsAsync();
 
     const historiesData = queryResult.records.map(record => ({
