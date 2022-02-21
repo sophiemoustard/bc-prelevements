@@ -36,7 +36,7 @@ const validateConfigTableContent = (data) => {
   if (!isValidBIC(data.creditorBIC)) errors.push('le BIC est invalide,');
   if (!isValidPrefix(data.creditorPrefix)) errors.push('le préfixe doit contenir exactement trois chiffres,');
   if (
-    !isValidTransactionLabel(data.rentTransactionLabel) ||
+    !isValidTransactionLabel(data.rentLabel) ||
     !isValidTransactionLabel(data.rentalExpensesLabel) ||
     !isValidTransactionLabel(data.currentExpensesLabel)) {
       errors.push('les libellés doivent contenir au maximum 140 caractères,');
@@ -61,7 +61,7 @@ export const getConfigData = async () => {
       creditorIBAN: configRecord.getCellValue(CREDITOR_IBAN_FIELD_ID),
       creditorBIC: configRecord.getCellValue(CREDITOR_BIC_FIELD_ID),
       creditorPrefix: configRecord.getCellValue(CREDITOR_PREFIX_FIELD_ID),
-      rentTransactionLabel: configRecord.getCellValue(RENT_FIELD_ID),
+      rentLabel: configRecord.getCellValue(RENT_FIELD_ID),
       rentalExpensesLabel: configRecord.getCellValue(RENTAL_EXPENSES_FIELD_ID),
       currentExpensesLabel: configRecord.getCellValue(CURRENT_EXPENSES_FIELD_ID),
     }

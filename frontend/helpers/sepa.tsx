@@ -113,7 +113,7 @@ const formatTransactions = async (configData, roommatesData, amounts) => {
     const currentExpenseTransations = [];
     const allTransactions = [];
     const transactionsLabel = [
-      {label: configData.rentTransactionLabel, value: RENT },
+      {label: configData.rentLabel, value: RENT },
       {label: configData.rentalExpensesLabel, value: RENTAL_EXPENSES },
       {label: configData.currentExpensesLabel, value: CURRENT_EXPENSES },
     ];
