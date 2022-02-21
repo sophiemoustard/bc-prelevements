@@ -95,19 +95,7 @@ export const getRoommatesData = async () => {
   return roommatesData;
 };
 
-export const getTableFieldsIdsAndLabel = (tableId) => {
-  let table 
-  try {
-    table = base.getTable(tableId);
-    const fields = table.fields.map(field => { return { name: field.name, id: field.id }; });
-
-    return fields;
-  } catch (e) {
-    addMessageAndThrow(e, `error during extraction of ${table.name} table`);
-  }
-};
-
-export const getFormattedTransactionsHistories = async () => {
+export const getTransactionsHistoryData = async () => {
   let queryResult;
   try {
     const transactionsHistoryTable = base.getTable(HISTORY_TABLE);
@@ -126,12 +114,12 @@ export const getFormattedTransactionsHistories = async () => {
   }
 };
 
-export const addRecord = async (tableId, data) => {
+export const addRecords = async (tableId, data) => {
   let table;
   try {
     table = base.getTable(tableId);
 
-    await table.createRecordAsync(data);
+    await table.createRecordsAsync(data);
   } catch (e) {
     addMessageAndThrow(e, `error during creation of ${table.name} table`);
   }

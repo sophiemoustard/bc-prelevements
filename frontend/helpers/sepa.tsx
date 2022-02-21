@@ -2,11 +2,10 @@ import { downloadXML } from './files'
 import dayjs from './dayjs';
 import ObjectID from 'bson-objectid';
 import {
-  addRecord,
+  addRecords,
   getConfigData,
-  getFormattedTransactionsHistories,
+  getTransactionsHistoryData,
   getRoommatesData,
-  getTableFieldsIdsAndLabel,
 } from './airtable';
 import { addMessageAndThrow } from './errors';
 import { AMOUNTS_NATURE, CURRENT_EXPENSES, RENT, RENTAL_EXPENSES } from './constants';
@@ -70,11 +69,9 @@ const formatTransactionNumber = (companyPrefixNumber, prefix, transactionNumber)
   return `REG-${companyPrefixNumber}${prefix}${transactionNumber.toString().padStart(5, '0')}`;
 };
 
-const getFieldLabel = (fields, fieldId) => fields.find(field => field.id === fieldId).name || '';
-
 const getTransactionsHistoryForCurrentMonthAndRUMs = async (date) => {
   try {
-    const histories = await getFormattedTransactionsHistories();
+    const histories = await getTransactionsHistoryData();
 
     const transactionMonthCount = histories.filter(h => dayjs(h.date).isSame(date, 'month')).length || 1;
     const RUMs = [...new Set(histories.map(h => h.RUM))];
@@ -85,43 +82,42 @@ const getTransactionsHistoryForCurrentMonthAndRUMs = async (date) => {
   }
 };
 
+const formatHistoryData = (roommate, transactionNumber, amounts, date, labels, label) => ({
+  [HISTORY_DEBITOR_NAME_FIELD_ID]: roommate.debitorName,
+  [HISTORY_TRANSACTION_NUMBER_FIELD_ID]: transactionNumber,
+  [HISTORY_TRANSACTION_ID_FIELD_ID]: ObjectID().toHexString(),
+  [HISTORY_AMOUNT_FIELD_ID]: amounts[label],
+  [HISTORY_RUM_FIELD_ID]: roommate.debitorRUM,
+  [HISTORY_IBAN_FIELD_ID]: roommate.debitorIBAN,
+  [HISTORY_DATE_FIELD_ID]: date,
+  [HISTORY_TYPE_FIELD_ID]: labels.find(item => item.value === label).label,
+});
+
 const formatTransactions = async (configData, roommatesData, amounts) => {
   try {
     const rentTransactions = [];
     const rentalExpenseTransactions = [];
     const currentExpenseTransations = [];
     const allTransactions = [];
-
-    const historyTableFieldsLabel = getTableFieldsIdsAndLabel(HISTORY_TABLE);
-
-    const natures = [
+    const transactionsLabel = [
       {label: configData.rentTransactionLabel, value: RENT },
       {label: configData.rentalExpensesLabel, value: RENTAL_EXPENSES },
       {label: configData.currentExpensesLabel, value: CURRENT_EXPENSES },
     ];
     const date = dayjs().toISOString();
-
     const prefixDate = dayjs(date).format('MMYY');
+
     let { transactionMonthCount } = await getTransactionsHistoryForCurrentMonthAndRUMs(date);
 
     for (const roommate of roommatesData) {
       for (const nature of AMOUNTS_NATURE) {
         const transactionNumber = formatTransactionNumber(configData.creditorPrefix, prefixDate, transactionMonthCount);
-        const historyData = {
-          [getFieldLabel(historyTableFieldsLabel, HISTORY_DEBITOR_NAME_FIELD_ID)]: roommate.debitorName,
-          [getFieldLabel(historyTableFieldsLabel, HISTORY_TRANSACTION_NUMBER_FIELD_ID)]: transactionNumber,
-          [getFieldLabel(historyTableFieldsLabel, HISTORY_TRANSACTION_ID_FIELD_ID)]: ObjectID().toHexString(),
-          [getFieldLabel(historyTableFieldsLabel, HISTORY_AMOUNT_FIELD_ID)]: amounts[nature],
-          [getFieldLabel(historyTableFieldsLabel, HISTORY_RUM_FIELD_ID)]: roommate.debitorRUM,
-          [getFieldLabel(historyTableFieldsLabel, HISTORY_IBAN_FIELD_ID)]: roommate.debitorIBAN,
-          [getFieldLabel(historyTableFieldsLabel, HISTORY_DATE_FIELD_ID)]: date,
-          [getFieldLabel(historyTableFieldsLabel, HISTORY_TYPE_FIELD_ID)]: natures.find(item => item.value === nature).label,
-        };
+        const historyData = formatHistoryData(roommate, transactionNumber, amounts, date, transactionsLabel, nature);
 
         if (nature === RENT) rentTransactions.push(historyData);
         else if (nature === RENTAL_EXPENSES) rentalExpenseTransactions.push(historyData);
         else currentExpenseTransations.push(historyData);
-        allTransactions.push(historyData);
+        allTransactions.push({ fields: historyData });
 
         transactionMonthCount += 1;
       }
@@ -159,7 +155,7 @@ export const downloadSEPAXml = async (amounts) => {
 
     const { allTransactions } = await formatTransactions(configData, roommatesData, amounts);
 
-    allTransactions.forEach(transaction => addRecord(HISTORY_TABLE, transaction));
+    await addRecords(HISTORY_TABLE, allTransactions);
   
     const filename = `prelevements_biens_communs_${dayjs().format('YYYY-MM-DD_HH-mm')}.xml`;
     return downloadXML(xmlContent, filename);
