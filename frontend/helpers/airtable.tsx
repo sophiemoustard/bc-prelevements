@@ -1,5 +1,5 @@
 import { base } from '@airtable/blocks';
-import { isValidIBAN, isValidBIC, isValidICS, isValidPrefix, isValidName, isValidTransactionNature } from './validations';
+import { isValidIBAN, isValidBIC, isValidICS, isValidPrefix, isValidName, isValidTransactionLabel } from './validations';
 import { throwValidationError, addMessageAndThrow } from './errors';
 import {
   CONFIG_TABLE_ID,
@@ -41,10 +41,10 @@ const validateConfigTableContent = (data) => {
   if (!isValidBIC(data.creditorBIC)) errors.push('le BIC est invalide,');
   if (!isValidPrefix(data.creditorPrefix)) errors.push('le préfixe doit contenir exactement trois chiffres,');
   if (
-    !isValidTransactionNature(data.rentTransactionLabel) ||
-    !isValidTransactionNature(data.rentalExpensesLabel) ||
-    !isValidTransactionNature(data.currentExpensesLabel)) {
-      errors.push('le libellé doit contenir au maximum 140 caractères,');
+    !isValidTransactionLabel(data.rentTransactionLabel) ||
+    !isValidTransactionLabel(data.rentalExpensesLabel) ||
+    !isValidTransactionLabel(data.currentExpensesLabel)) {
+      errors.push('les libellés doivent contenir au maximum 140 caractères,');
   }
 
   if (errors.length) {
@@ -124,9 +124,7 @@ export const getFormattedTransactionsHistories = async () => {
   } finally {
     if (queryResult && queryResult.isDataLoaded) queryResult.unloadData();
   }
-  
 };
-
 
 export const addRecord = async (tableId, data) => {
   let table;

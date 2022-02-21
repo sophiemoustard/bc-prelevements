@@ -74,15 +74,12 @@ const getFieldLabel = (fields, fieldId) => fields.find(field => field.id === fie
 
 const getTransactionsHistoryForCurrentMonthAndRUMs = async (date) => {
   try {
-    let transactionMonthNumber = 1;
-    let RUMs = [];
-
     const histories = await getFormattedTransactionsHistories();
 
-    transactionMonthNumber = histories.map(h => h.date).filter(hdate => dayjs(hdate).isSame(date, 'month')).length
-    RUMs = [...new Set(histories.map(h => h.RUM))];
+    const transactionMonthCount = histories.filter(h => dayjs(h.date).isSame(date, 'month')).length || 1;
+    const RUMs = [...new Set(histories.map(h => h.RUM))];
 
-    return { transactionMonthNumber, RUMs };
+    return { transactionMonthCount, RUMs };
   } catch (e) {
     addMessageAndThrow(e, 'error during extraction of history table');
   }
@@ -94,7 +91,6 @@ const formatTransactions = async (configData, roommatesData, amounts) => {
     const rentalExpenseTransactions = [];
     const currentExpenseTransations = [];
     const allTransactions = [];
-    let transactionNumber;
 
     const historyTableFieldsLabel = getTableFieldsIdsAndLabel(HISTORY_TABLE);
 
@@ -106,11 +102,11 @@ const formatTransactions = async (configData, roommatesData, amounts) => {
     const date = dayjs().toISOString();
 
     const prefixDate = dayjs(date).format('MMYY');
-    let { transactionMonthNumber } = await getTransactionsHistoryForCurrentMonthAndRUMs(date);
+    let { transactionMonthCount } = await getTransactionsHistoryForCurrentMonthAndRUMs(date);
 
     for (const roommate of roommatesData) {
       for (const nature of AMOUNTS_NATURE) {
-        transactionNumber = formatTransactionNumber(configData.creditorPrefix, prefixDate, transactionMonthNumber);
+        const transactionNumber = formatTransactionNumber(configData.creditorPrefix, prefixDate, transactionMonthCount);
         const historyData = {
           [getFieldLabel(historyTableFieldsLabel, HISTORY_DEBITOR_NAME_FIELD_ID)]: roommate.debitorName,
           [getFieldLabel(historyTableFieldsLabel, HISTORY_TRANSACTION_NUMBER_FIELD_ID)]: transactionNumber,
@@ -127,7 +123,7 @@ const formatTransactions = async (configData, roommatesData, amounts) => {
         else currentExpenseTransations.push(historyData);
         allTransactions.push(historyData);
 
-        transactionMonthNumber += 1;
+        transactionMonthCount += 1;
       }
     }
 
