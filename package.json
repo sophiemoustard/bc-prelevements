@@ -4,6 +4,7 @@
     "bson-objectid": "^2.0.2",
     "dayjs": "^1.10.7",
     "ibantools": "^4.1.4",
+    "lodash.chunk": "^4.2.0",
     "react": "^16.9.0",
     "react-dom": "^16.9.0",
     "xmlbuilder": "^15.1.1"

@@ -1,4 +1,5 @@
 import { base } from '@airtable/blocks';
+import lodash from 'lodash';
 import { isValidIBAN, isValidBIC, isValidICS, isValidPrefix, isValidName, isValidTransactionLabel } from './validations';
 import { throwValidationError, addMessageAndThrow } from './errors';
 import {
@@ -112,17 +113,10 @@ export const getTransactionsHistoryData = async () => {
 export const addRecords = async (tableId, data) => {
   let table;
   try {
-    let i = 0;
     table = base.getTable(tableId);
 
-    while (i < data.length) {
-      const dataBatch = data.slice(i, i + BATCH_SIZE);
-
-      await table.createRecordsAsync(dataBatch);
-
-      i += BATCH_SIZE;
-    }
-
+    const records = lodash.chunk(data, BATCH_SIZE);
+    await Promise.all(records.map(async record => await table.createRecordsAsync(record)));
   } catch (e) {
     addMessageAndThrow(e, `error during creation of ${table.name} table`);
   }
