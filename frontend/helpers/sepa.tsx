@@ -83,7 +83,7 @@ const getTransactionsHistoryForCurrentMonthAndRUMs = async (date) => {
   try {
     const histories = await getTransactionsHistoryData();
 
-    const transactionMonthCount = histories.filter(h => dayjs(h.date).isSame(date, 'month')).length || 1;
+    const transactionMonthCount = histories.filter(h => dayjs(h.date).isSame(date, 'month')).length || 0;
     const RUMs = [...new Set(histories.map(h => h.RUM))];
 
     return { transactionMonthCount, RUMs };
@@ -121,6 +121,8 @@ const formatTransactions = async (configData, roommatesData, amounts) => {
 
     for (const roommate of roommatesData) {
       for (const nature of AMOUNTS_NATURE) {
+        transactionMonthCount += 1;
+
         const transactionNumber = formatTransactionNumber(configData.creditorPrefix, prefixDate, transactionMonthCount);
         const historyData = formatHistoryData(roommate, transactionNumber, amounts, date, transactionsLabel, nature);
 
@@ -128,8 +130,6 @@ const formatTransactions = async (configData, roommatesData, amounts) => {
         else if (nature === RENTAL_EXPENSES) rentalExpenseTransactions.push(historyData);
         else currentExpenseTransations.push(historyData);
         allTransactions.push({ fields: historyData });
-
-        transactionMonthCount += 1;
       }
     }
 
