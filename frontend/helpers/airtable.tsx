@@ -115,8 +115,8 @@ export const addRecords = async (tableId, data) => {
   try {
     table = base.getTable(tableId);
 
-    const records = lodash.chunk(data, BATCH_SIZE);
-    await Promise.all(records.map(async record => await table.createRecordsAsync(record)));
+    const recordsBatches = lodash.chunk(data, BATCH_SIZE);
+    await Promise.all(recordsBatches.map(records => table.createRecordsAsync(records)));
   } catch (e) {
     addMessageAndThrow(e, `error during creation of ${table.name} table`);
   }

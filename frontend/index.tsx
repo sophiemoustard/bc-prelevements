@@ -11,7 +11,7 @@ const App = () => {
 
   const enableDownload = amounts.rent > 0 && amounts.rentalExpenses > 0 && amounts.currentExpenses > 0;
 
-  const download = async (amounts) => {
+  const download = async () => {
     dispatchError({ type: RESET_ERROR });
     try {
       await downloadSEPAXml(amounts);
@@ -31,7 +31,7 @@ const App = () => {
           label="Montant Charges locatives" required/>
       <NiInput value={amounts.currentExpenses} onChange={setAmountField('currentExpenses')} type='number'
           label="Montant Frais courants" required/>
-      <Button onClick={() => download(amounts)} icon="edit" disabled={!enableDownload}>Telecharger Le SEPA</Button>
+      <Button onClick={download} icon="edit" disabled={!enableDownload}>Telecharger Le SEPA</Button>
       {error.value && <Text style={style.error}>{error.message}</Text>}
     </>
   );

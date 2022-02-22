@@ -99,7 +99,7 @@ const formatHistoryData = (roommate, transactionNumber, amounts, date, labels, l
   [HISTORY_DEBITOR_NAME_FIELD_ID]: roommate.debitorName,
   [HISTORY_TRANSACTION_NUMBER_FIELD_ID]: transactionNumber,
   [HISTORY_TRANSACTION_ID_FIELD_ID]: ObjectID().toHexString(),
-  [HISTORY_AMOUNT_FIELD_ID]: amounts[label],
+  [HISTORY_AMOUNT_FIELD_ID]: amounts[label].toString(),
   [HISTORY_RUM_FIELD_ID]: roommate.debitorRUM,
   [HISTORY_IBAN_FIELD_ID]: roommate.debitorIBAN,
   [HISTORY_DATE_FIELD_ID]: date,
