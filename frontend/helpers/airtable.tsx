@@ -17,9 +17,15 @@ import {
   RENT_FIELD_ID,
   RENTAL_EXPENSES_FIELD_ID,
   CURRENT_EXPENSES_FIELD_ID,
-  HISTORY_DATE_FIELD_ID,
-  HISTORY_RUM_FIELD_ID,
   HISTORY_TABLE_ID,
+  HISTORY_AMOUNT_FIELD_ID,
+  HISTORY_DATE_FIELD_ID,
+  HISTORY_DEBITOR_NAME_FIELD_ID,
+  HISTORY_IBAN_FIELD_ID,
+  HISTORY_RUM_FIELD_ID,
+  HISTORY_TRANSACTION_ID_FIELD_ID,
+  HISTORY_TRANSACTION_NUMBER_FIELD_ID,
+  HISTORY_TYPE_FIELD_ID,
   BATCH_SIZE,
 } from '../data/constants';
 
@@ -110,13 +116,35 @@ export const getTransactionsHistoryData = async () => {
   }
 };
 
-export const addRecords = async (tableId, data) => {
+export const createTransactionsHistoryRecords = async (transactionsData, date) => {
   try {
-    const table = base.getTable(tableId);
+    const table = base.getTable(HISTORY_TABLE_ID);
 
+    const records = transactionsData.map(transaction => ({
+      fields: {
+        [HISTORY_TRANSACTION_ID_FIELD_ID]: transaction.id,
+        [HISTORY_TRANSACTION_NUMBER_FIELD_ID]: transaction.number,
+        [HISTORY_AMOUNT_FIELD_ID]: transaction.amount.toString(),
+        [HISTORY_TYPE_FIELD_ID]: transaction.expenseLabel,
+        [HISTORY_DEBITOR_NAME_FIELD_ID]: transaction.debitorName,
+        [HISTORY_IBAN_FIELD_ID]: transaction.debitorIBAN,
+        [HISTORY_RUM_FIELD_ID]: transaction.debitorRUM,
+        [HISTORY_DATE_FIELD_ID]: date,
+      }
+    }))
+
+    await addRecords(table, records);
+  } catch (e) {
+    addMessageAndThrow(e, 'error during history transactions saving');
+  }
+};
+
+
+export const addRecords = async (table, data) => {
+  try {
     const recordsBatches = lodash.chunk(data, BATCH_SIZE);
     await Promise.all(recordsBatches.map((records: typeof data) => table.createRecordsAsync(records)));
   } catch (e) {
-    addMessageAndThrow(e, `error during records creation`);
+    addMessageAndThrow(e, 'error during records creation');
   }
 };
