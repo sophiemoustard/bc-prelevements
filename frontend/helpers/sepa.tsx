@@ -210,8 +210,7 @@ export const downloadSEPAXml = async (amounts) => {
     xmlContent.Document.CstmrDrctDbtInitn.PmtInf.DrctDbtTxInf = 
       [rentPaymentInfo, rentalExpensesPaymentInfo, currentExpensesPaymentInfo];
 
-    const currentDate = dayjs().toISOString()
-    await createTransactionsHistoryRecords(allTransactions, currentDate);
+    await createTransactionsHistoryRecords(allTransactions);
   
     const filename = `prelevements_biens_communs_${dayjs().format('YYYY-MM-DD_HH-mm')}.xml`;
     return downloadXML(xmlContent, filename);

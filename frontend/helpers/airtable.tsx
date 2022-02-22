@@ -28,6 +28,7 @@ import {
   HISTORY_TYPE_FIELD_ID,
   BATCH_SIZE,
 } from '../data/constants';
+import dayjs from 'dayjs';
 
 const validateConfigTableLength = (queryResult) => {
   if (queryResult.records.length !== 1) {
@@ -116,7 +117,7 @@ export const getTransactionsHistoryData = async () => {
   }
 };
 
-export const createTransactionsHistoryRecords = async (transactionsData, date) => {
+export const createTransactionsHistoryRecords = async (transactionsData) => {
   try {
     const table = base.getTable(HISTORY_TABLE_ID);
 
@@ -129,7 +130,7 @@ export const createTransactionsHistoryRecords = async (transactionsData, date) =
         [HISTORY_DEBITOR_NAME_FIELD_ID]: transaction.debitorName,
         [HISTORY_IBAN_FIELD_ID]: transaction.debitorIBAN,
         [HISTORY_RUM_FIELD_ID]: transaction.debitorRUM,
-        [HISTORY_DATE_FIELD_ID]: date,
+        [HISTORY_DATE_FIELD_ID]: dayjs().toISOString(),
       }
     }))
 
