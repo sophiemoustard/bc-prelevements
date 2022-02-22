@@ -93,22 +93,18 @@ const formatTransactionNumber = (companyPrefixNumber, prefix, transactionNumber)
 };
 
 const generateTransactionsForOnePayment = (data) => {
-  try {
-    const prefixDate = dayjs().format('MMYY');
+  const prefixDate = dayjs().format('MMYY');
 
-    return data.roommatesData.map((roommate, index) => ({
-      id: ObjectID().toHexString(),
-      number: formatTransactionNumber(data.creditorPrefix, prefixDate, data.transactionMonthCount + index + 1),
-      amount: data.amount,
-      expenseLabel: data.expenseLabel,
-      debitorName : roommate.debitorName,
-      debitorIBAN : roommate.debitorIBAN,
-      debitorBIC : roommate.debitorBIC,
-      debitorRUM: roommate.debitorRUM,
-    }))
-  } catch (e) {
-    addMessageAndThrow(e, 'error generating transaction data');
-  }
+  return data.roommatesData.map((roommate, index) => ({
+    id: ObjectID().toHexString(),
+    number: formatTransactionNumber(data.creditorPrefix, prefixDate, data.transactionMonthCount + index + 1),
+    amount: data.amount,
+    expenseLabel: data.expenseLabel,
+    debitorName : roommate.debitorName,
+    debitorIBAN : roommate.debitorIBAN,
+    debitorBIC : roommate.debitorBIC,
+    debitorRUM: roommate.debitorRUM,
+  }))
 };
 
 export const downloadSEPAXml = async (amounts) => {
@@ -117,7 +113,7 @@ export const downloadSEPAXml = async (amounts) => {
     const roommatesData = await getRoommatesData();
     const transactionsHistoryData = await getTransactionsHistoryData();
     const transactionMonthCount = transactionsHistoryData.filter(h => dayjs().isSame(h.date, 'month')).length || 0;
-    const randomId = randomize('0', 22);
+    const randomId = randomize('0', 21);
 
     const transactionsRent = generateTransactionsForOnePayment({
       roommatesData,
@@ -207,8 +203,11 @@ export const downloadSEPAXml = async (amounts) => {
       creditorName: configData.creditorName,
       ics: configData.ics,
     });
-    xmlContent.Document.CstmrDrctDbtInitn.PmtInf.DrctDbtTxInf = 
-      [rentPaymentInfo, rentalExpensesPaymentInfo, currentExpensesPaymentInfo];
+    xmlContent.Document.CstmrDrctDbtInitn.PmtInf.DrctDbtTxInf = [
+      rentPaymentInfo,
+      rentalExpensesPaymentInfo,
+      currentExpensesPaymentInfo
+    ];
 
     await createTransactionsHistoryRecords(allTransactions);
   
