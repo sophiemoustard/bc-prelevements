@@ -1,5 +1,6 @@
 import { base } from '@airtable/blocks';
-import { isValidIBAN, isValidBIC, isValidICS, isValidPrefix, isValidName } from './validations';
+import lodash from 'lodash';
+import { isValidIBAN, isValidBIC, isValidICS, isValidPrefix, isValidName, isValidTransactionLabel } from './validations';
 import { throwValidationError, addMessageAndThrow } from './errors';
 import {
   CONFIG_TABLE_ID,
@@ -13,6 +14,13 @@ import {
   RUM_FIELD_ID,
   BIC_FIELD_ID,
   ICS_FIELD_ID,
+  RENT_FIELD_ID,
+  RENTAL_EXPENSES_FIELD_ID,
+  CURRENT_EXPENSES_FIELD_ID,
+  HISTORY_DATE_FIELD_ID,
+  HISTORY_RUM_FIELD_ID,
+  HISTORY_TABLE_ID,
+  BATCH_SIZE,
 } from '../data/constants';
 
 const validateConfigTableLength = (queryResult) => {
@@ -28,6 +36,12 @@ const validateConfigTableContent = (data) => {
   if (!isValidIBAN(data.creditorIBAN)) errors.push('l\'IBAN est invalide,');
   if (!isValidBIC(data.creditorBIC)) errors.push('le BIC est invalide,');
   if (!isValidPrefix(data.creditorPrefix)) errors.push('le préfixe doit contenir exactement trois chiffres,');
+  if (
+    !isValidTransactionLabel(data.rentLabel) ||
+    !isValidTransactionLabel(data.rentalExpensesLabel) ||
+    !isValidTransactionLabel(data.currentExpensesLabel)) {
+      errors.push('les libellés doivent contenir au maximum 140 caractères,');
+  }
 
   if (errors.length) {
     throwValidationError(['Erreur(s) dans la table CONFIGURATIONS:', ...errors].join(' '));
@@ -48,6 +62,9 @@ export const getConfigData = async () => {
       creditorIBAN: configRecord.getCellValue(CREDITOR_IBAN_FIELD_ID),
       creditorBIC: configRecord.getCellValue(CREDITOR_BIC_FIELD_ID),
       creditorPrefix: configRecord.getCellValue(CREDITOR_PREFIX_FIELD_ID),
+      rentLabel: configRecord.getCellValue(RENT_FIELD_ID),
+      rentalExpensesLabel: configRecord.getCellValue(RENTAL_EXPENSES_FIELD_ID),
+      currentExpensesLabel: configRecord.getCellValue(CURRENT_EXPENSES_FIELD_ID),
     }
     validateConfigTableContent(configs);
     
@@ -72,4 +89,34 @@ export const getRoommatesData = async () => {
 
   queryResult.unloadData();
   return roommatesData;
+};
+
+export const getTransactionsHistoryData = async () => {
+  let queryResult;
+  try {
+    const transactionsHistoryTable = base.getTable(HISTORY_TABLE_ID);
+    queryResult = await transactionsHistoryTable.selectRecordsAsync();
+
+    const historiesData = queryResult.records.map(record => ({
+      date: record.getCellValue(HISTORY_DATE_FIELD_ID),
+      RUM: record.getCellValue(HISTORY_RUM_FIELD_ID)
+    }));
+  
+  return historiesData;
+  } catch (e) {
+    addMessageAndThrow(e, 'error during extraction of history table');
+  } finally {
+    if (queryResult && queryResult.isDataLoaded) queryResult.unloadData();
+  }
+};
+
+export const addRecords = async (tableId, data) => {
+  try {
+    const table = base.getTable(tableId);
+
+    const recordsBatches = lodash.chunk(data, BATCH_SIZE);
+    await Promise.all(recordsBatches.map((records: typeof data) => table.createRecordsAsync(records)));
+  } catch (e) {
+    addMessageAndThrow(e, `error during records creation`);
+  }
 };

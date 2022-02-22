@@ -14,7 +14,7 @@ const App = () => {
   const download = async () => {
     dispatchError({ type: RESET_ERROR });
     try {
-      await downloadSEPAXml()
+      await downloadSEPAXml(amounts);
     } catch (e) {
       console.error(e);
       if (e.name === VALIDATION_ERROR) dispatchError({ type: SET_ERROR, payload: e.message });
@@ -23,6 +23,7 @@ const App = () => {
   };
 
   const setAmountField = (key) => (e) => { setAmounts({ ...amounts, [key]: e.target.value }); };
+
   return (
     <>
       <NiInput value={amounts.rent} onChange={setAmountField('rent')} label="Montant Loyer" type='number' required/>
