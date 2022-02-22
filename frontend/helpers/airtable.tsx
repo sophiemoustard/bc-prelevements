@@ -111,13 +111,12 @@ export const getTransactionsHistoryData = async () => {
 };
 
 export const addRecords = async (tableId, data) => {
-  let table;
   try {
-    table = base.getTable(tableId);
+    const table = base.getTable(tableId);
 
     const recordsBatches = lodash.chunk(data, BATCH_SIZE);
-    await Promise.all(recordsBatches.map(records => table.createRecordsAsync(records)));
+    await Promise.all(recordsBatches.map((records: typeof data) => table.createRecordsAsync(records)));
   } catch (e) {
-    addMessageAndThrow(e, `error during creation of ${table.name} table`);
+    addMessageAndThrow(e, `error during records creation`);
   }
 };
