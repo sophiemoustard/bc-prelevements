@@ -1,6 +1,15 @@
 import { base } from '@airtable/blocks';
 import chunk from 'lodash.chunk';
-import { isValidIBAN, isValidBIC, isValidICS, isValidPrefix, isValidName, isValidTransactionLabel } from './validations';
+import {
+  isValidIBAN,
+  isValidBIC,
+  isValidICS,
+  isValidPrefix,
+  isValidName,
+  isValidTransactionLabel,
+  isValidRUM,
+  isValidDate,
+} from './validations';
 import { throwValidationError, addMessageAndThrow } from './errors';
 import {
   CONFIG_TABLE_ID,
@@ -60,7 +69,7 @@ export const getConfigData = async () => {
   let queryResult;
   try {
     const configTable = base.getTable(CONFIG_TABLE_ID);
-    const queryResult = await configTable.selectRecordsAsync();
+    queryResult = await configTable.selectRecordsAsync();
     validateConfigTableLength(queryResult);
 
     const configRecord = queryResult.records[0];
@@ -84,20 +93,52 @@ export const getConfigData = async () => {
   }
 };
 
+const checkEmptyRecords = (records) => {
+  const hasEmptyRecord = records.find(record =>
+    (record.debitorName === ' ') &&
+    !(record.debitorIBAN) &&
+    !(record.debitorBIC) &&
+    !(record.RUM) &&
+    !(record.mandateSignatureDate)) ;
+  if (hasEmptyRecord) throwValidationError('Erreur dans la table COLOCATAIRES: au moins une ligne est vide.');
+};
+
+const validateRoommatesTableContent = (data) => {
+  const errors = [];
+  if (!isValidName(data.debitorName)) errors.push('le nom du débiteur doit contenir au maximum 70 caractères,');
+  if (!isValidIBAN(data.debitorIBAN)) errors.push('l\'IBAN est invalide,');
+  if (!isValidBIC(data.debitorBIC)) errors.push('le BIC est invalide,');
+  if (!isValidRUM(data.debitorRUM)) errors.push('le RUM est invalide,');
+  if (!isValidDate(data.mandateSignatureDate)) errors.push('la date de signature de mandat est invalide,');
+
+  if (errors.length) {
+    throwValidationError(['Erreur(s) dans la table COLOCATAIRES:', ...errors].join(' '));
+  }
+};
+
 export const getRoommatesData = async () => {
-  const roommatesTable = base.getTable(ROOMMATES_TABLE_ID);
-  const queryResult = await roommatesTable.selectRecordsAsync();
+  let queryResult;
+  try {
+    const roommatesTable = base.getTable(ROOMMATES_TABLE_ID);
+    queryResult = await roommatesTable.selectRecordsAsync();
 
-  const roommatesData = queryResult.records.map(record => ({
-    debitorName: record.getCellValue(ROOMMATE_NAME_FIELD_ID),
-    debitorIBAN: record.getCellValue(ROOMMATE_IBAN_FIELD_ID),
-    debitorRUM: record.getCellValue(ROOMMATE_RUM_FIELD_ID),
-    debitorBIC: record.getCellValue(ROOMMATE_BIC_FIELD_ID),
-    mandateSignatureDate: record.getCellValue(MANDATE_SIGNATURE_DATE_FIELD_ID),
-  }));
+    const roommatesData = queryResult.records.map(record => ({
+      debitorName: record.getCellValue(ROOMMATE_NAME_FIELD_ID),
+      debitorIBAN: record.getCellValue(ROOMMATE_IBAN_FIELD_ID),
+      debitorRUM: record.getCellValue(ROOMMATE_RUM_FIELD_ID),
+      debitorBIC: record.getCellValue(ROOMMATE_BIC_FIELD_ID),
+      mandateSignatureDate: record.getCellValue(MANDATE_SIGNATURE_DATE_FIELD_ID),
+    }));
 
-  queryResult.unloadData();
-  return roommatesData;
+    checkEmptyRecords(roommatesData);
+    await Promise.all(roommatesData.map(record => validateRoommatesTableContent(record)));
+
+    return roommatesData;
+  } catch (e) {
+    addMessageAndThrow(e, 'error during extraction of roommates table');
+  } finally {
+    if (queryResult && queryResult.isDataLoaded) queryResult.unloadData();
+  }
 };
 
 export const getTransactionsHistoryData = async () => {
