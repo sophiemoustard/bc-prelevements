@@ -105,35 +105,47 @@ const generateTransactionsForOnePayment = (data) => {
   }))
 };
 
+const generateTransactions = (amounts, roommatesData, configData, transactionsHistoryData) => {
+  const transactionMonthCount = transactionsHistoryData.filter(h => dayjs().isSame(h.date, 'month')).length || 0;
+
+  const transactionsRent = generateTransactionsForOnePayment({
+    roommatesData,
+    amount: amounts.rent,
+    expenseLabel: configData.rentLabel,
+    transactionMonthCount,
+    creditorPrefix: configData.creditorPrefix
+  });
+  const transactionsRentalExpenses = generateTransactionsForOnePayment({
+    roommatesData,
+    amount: amounts.rentalExpenses,
+    expenseLabel: configData.rentalExpensesLabel,
+    transactionMonthCount: transactionMonthCount + transactionsRent.length,
+    creditorPrefix: configData.creditorPrefix
+  });
+  const transactionsCurrentExpenses = generateTransactionsForOnePayment({
+    roommatesData,
+    amount: amounts.currentExpenses,
+    expenseLabel: configData.currentExpensesLabel,
+    transactionMonthCount: transactionMonthCount + transactionsRent.length + transactionsRentalExpenses.length,
+    creditorPrefix: configData.creditorPrefix
+  });
+
+  return { transactionsRent, transactionsRentalExpenses, transactionsCurrentExpenses };
+};
+
 export const downloadSEPAXml = async (amounts) => {
   try {
     const configData = await getConfigData();
     const roommatesData = await getRoommatesData();
     const transactionsHistoryData = await getTransactionsHistoryData();
-    const transactionMonthCount = transactionsHistoryData.filter(h => dayjs().isSame(h.date, 'month')).length || 0;
     const randomId = randomize('0', 21);
 
-    const transactionsRent = generateTransactionsForOnePayment({
-      roommatesData,
-      amount: amounts.rent,
-      expenseLabel: configData.rentLabel,
-      transactionMonthCount,
-      creditorPrefix: configData.creditorPrefix
-    });
-    const transactionsRentalExpenses = generateTransactionsForOnePayment({
-      roommatesData,
-      amount: amounts.rentalExpenses,
-      expenseLabel: configData.rentalExpensesLabel,
-      transactionMonthCount: transactionMonthCount + transactionsRent.length,
-      creditorPrefix: configData.creditorPrefix
-    });
-    const transactionsCurrentExpenses = generateTransactionsForOnePayment({
-      roommatesData,
-      amount: amounts.currentExpenses,
-      expenseLabel: configData.currentExpensesLabel,
-      transactionMonthCount: transactionMonthCount + transactionsRent.length + transactionsRentalExpenses.length,
-      creditorPrefix: configData.creditorPrefix
-    });
+    
+    const {
+      transactionsRent,
+      transactionsRentalExpenses,
+      transactionsCurrentExpenses
+    } = generateTransactions(amounts, roommatesData, configData, transactionsHistoryData);
     const allTransactions = [...transactionsRent, ...transactionsRentalExpenses, ...transactionsCurrentExpenses];
     
     const rentTotalAmount = transactionsRent.reduce((acc, next) => acc + next.amount, 0);
