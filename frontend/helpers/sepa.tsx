@@ -19,9 +19,7 @@ export const createXMLDocument = () => ({
     '@xsi:schemaLocation': 'urn:iso:std:iso:20022:tech:xsd:pain.008.001.02 pain.008.001.02.xsd',
     CstmrDrctDbtInitn: {
       GrpHdr: {},
-      PmtInf: {
-        DrctDbtTxInf: [],
-      },
+      PmtInf: [],
     },
   },
 });
@@ -203,7 +201,7 @@ export const downloadSEPAXml = async (amounts) => {
       creditorName: configData.creditorName,
       ics: configData.ics,
     });
-    xmlContent.Document.CstmrDrctDbtInitn.PmtInf.DrctDbtTxInf = [
+    xmlContent.Document.CstmrDrctDbtInitn.PmtInf = [
       rentPaymentInfo,
       rentalExpensesPaymentInfo,
       currentExpensesPaymentInfo
