@@ -1,5 +1,5 @@
 import { base } from '@airtable/blocks';
-import lodash from 'lodash';
+import chunk from 'lodash.chunk';
 import { isValidIBAN, isValidBIC, isValidICS, isValidPrefix, isValidName, isValidTransactionLabel } from './validations';
 import { throwValidationError, addMessageAndThrow } from './errors';
 import {
@@ -145,7 +145,7 @@ export const createTransactionsHistoryRecords = async (transactionsData) => {
 
 export const addRecords = async (table, data) => {
   try {
-    const recordsBatches = lodash.chunk(data, BATCH_SIZE);
+    const recordsBatches = chunk(data, BATCH_SIZE);
     await Promise.all(recordsBatches.map((records: typeof data) => table.createRecordsAsync(records)));
   } catch (e) {
     addMessageAndThrow(e, 'error during records creation');
