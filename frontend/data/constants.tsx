@@ -7,10 +7,6 @@ import { devModelsId, prodModelsId, PROD_BASE_ID } from '../../.env/models'
  */
 export const INTERNAL_ERROR_MESSAGE = 'Une erreur interne s\'est produite, veuillez contacter l\'équipe technique.';
 export const VALIDATION_ERROR = 'Validation error';
-export const RENT = 'rent';
-export const RENTAL_EXPENSES = 'rentalExpenses';
-export const CURRENT_EXPENSES = 'currentExpenses';
-export const AMOUNTS_NATURE = [RENT, RENTAL_EXPENSES, CURRENT_EXPENSES];
 export const BATCH_SIZE = 50;
 
 
@@ -22,25 +18,25 @@ const modelsId = base.id === PROD_BASE_ID ? prodModelsId : devModelsId;
 
 // ROOM MATES TABLE
 export const ROOMMATES_TABLE_ID = modelsId.roommatesTableId;
-export const ROOMMATE_FIELD_ID = modelsId.roommateFieldId;
-export const LASTNAME_FIELD_ID = modelsId.lastNameFieldId;
-export const FIRSTNAME_FIELD_ID = modelsId.firstNameFieldId;
-export const IBAN_FIELD_ID = modelsId.ibanFieldId;
-export const BIC_FIELD_ID = modelsId.bicFieldId;
-export const RUM_FIELD_ID = modelsId.rumFieldId;
-export const DATE_FIELD_ID = modelsId.dateFieldId;
+export const ROOMMATE_NAME_FIELD_ID = modelsId.roommateNameFieldId;
+export const ROOMMATE_LASTNAME_FIELD_ID = modelsId.roommateLastNameFieldId;
+export const ROOMMATE_FIRSTNAME_FIELD_ID = modelsId.roommateFirstNameFieldId;
+export const ROOMMATE_IBAN_FIELD_ID = modelsId.roommateIbanFieldId;
+export const ROOMMATE_BIC_FIELD_ID = modelsId.roommateBicFieldId;
+export const ROOMMATE_RUM_FIELD_ID = modelsId.roommateRumFieldId;
+export const MANDATE_SIGNATURE_DATE_FIELD_ID = modelsId.mandatSignatureDateFieldId;
 
 
 // CONFIG TABLE
 export const CONFIG_TABLE_ID = modelsId.configTableId;
 export const CREDITOR_NAME_FIELD_ID = modelsId.creditorNameFieldId;
-export const ICS_FIELD_ID = modelsId.icsFieldId;
+export const CREDITOR_ICS_FIELD_ID = modelsId.icsFieldId;
 export const CREDITOR_IBAN_FIELD_ID = modelsId.creditorIbanFieldId;
 export const CREDITOR_BIC_FIELD_ID = modelsId.creditorBicFieldId;
 export const CREDITOR_PREFIX_FIELD_ID = modelsId.creditorPrefixFieldId;
-export const RENT_FIELD_ID = modelsId.rentFieldId;
-export const RENTAL_EXPENSES_FIELD_ID = modelsId.rentalExpensesFieldId;
-export const CURRENT_EXPENSES_FIELD_ID = modelsId.currentExpensesFieldId;
+export const RENT_LABEL_FIELD_ID = modelsId.rentFieldId;
+export const RENTAL_EXPENSES_LABEL_FIELD_ID = modelsId.rentalExpensesFieldId;
+export const CURRENT_EXPENSES_LABEL_FIELD_ID = modelsId.currentExpensesFieldId;
 
 // // TRANSACTION HISTORY TABLE
 export const HISTORY_TABLE_ID = modelsId.historyTableId;

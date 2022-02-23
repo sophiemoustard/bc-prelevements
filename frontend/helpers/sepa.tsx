@@ -78,6 +78,7 @@ const generateTransactionsInfo = (transactions) => transactions.map(transaction 
   DrctDbtTx: {
     MndtRltdInf: {
       MndtId: transaction.debitorRUM,
+      ReqdColltnDt: transaction.mandateSignatureDate,
     },
   },
   DbtrAgt: { FinInstnId: { BIC: removeSpaces(transaction.debitorBIC) } },
@@ -102,6 +103,7 @@ const generateTransactionsForOnePayment = (data) => {
     debitorIBAN : roommate.debitorIBAN,
     debitorBIC : roommate.debitorBIC,
     debitorRUM: roommate.debitorRUM,
+    mandateSignatureDate: roommate.mandateSignatureDate,
   }))
 };
 
