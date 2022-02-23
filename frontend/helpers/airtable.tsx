@@ -8,20 +8,28 @@ import {
   CREDITOR_IBAN_FIELD_ID,
   CREDITOR_BIC_FIELD_ID,
   CREDITOR_PREFIX_FIELD_ID,
+  CREDITOR_ICS_FIELD_ID,
+  RENT_LABEL_FIELD_ID,
+  RENTAL_EXPENSES_LABEL_FIELD_ID,
+  CURRENT_EXPENSES_LABEL_FIELD_ID,
   ROOMMATES_TABLE_ID,
-  ROOMMATE_FIELD_ID,
-  IBAN_FIELD_ID,
-  RUM_FIELD_ID,
-  BIC_FIELD_ID,
-  ICS_FIELD_ID,
-  RENT_FIELD_ID,
-  RENTAL_EXPENSES_FIELD_ID,
-  CURRENT_EXPENSES_FIELD_ID,
-  HISTORY_DATE_FIELD_ID,
-  HISTORY_RUM_FIELD_ID,
+  ROOMMATE_NAME_FIELD_ID,
+  ROOMMATE_IBAN_FIELD_ID,
+  ROOMMATE_RUM_FIELD_ID,
+  ROOMMATE_BIC_FIELD_ID,
+  MANDATE_SIGNATURE_DATE_FIELD_ID,
   HISTORY_TABLE_ID,
+  HISTORY_AMOUNT_FIELD_ID,
+  HISTORY_DATE_FIELD_ID,
+  HISTORY_DEBITOR_NAME_FIELD_ID,
+  HISTORY_IBAN_FIELD_ID,
+  HISTORY_RUM_FIELD_ID,
+  HISTORY_TRANSACTION_ID_FIELD_ID,
+  HISTORY_TRANSACTION_NUMBER_FIELD_ID,
+  HISTORY_TYPE_FIELD_ID,
   BATCH_SIZE,
 } from '../data/constants';
+import dayjs from 'dayjs';
 
 const validateConfigTableLength = (queryResult) => {
   if (queryResult.records.length !== 1) {
@@ -58,13 +66,13 @@ export const getConfigData = async () => {
     const configRecord = queryResult.records[0];
     const configs = {
       creditorName: configRecord.getCellValue(CREDITOR_NAME_FIELD_ID),
-      ics: configRecord.getCellValue(ICS_FIELD_ID),
+      ics: configRecord.getCellValue(CREDITOR_ICS_FIELD_ID),
       creditorIBAN: configRecord.getCellValue(CREDITOR_IBAN_FIELD_ID),
       creditorBIC: configRecord.getCellValue(CREDITOR_BIC_FIELD_ID),
       creditorPrefix: configRecord.getCellValue(CREDITOR_PREFIX_FIELD_ID),
-      rentLabel: configRecord.getCellValue(RENT_FIELD_ID),
-      rentalExpensesLabel: configRecord.getCellValue(RENTAL_EXPENSES_FIELD_ID),
-      currentExpensesLabel: configRecord.getCellValue(CURRENT_EXPENSES_FIELD_ID),
+      rentLabel: configRecord.getCellValue(RENT_LABEL_FIELD_ID),
+      rentalExpensesLabel: configRecord.getCellValue(RENTAL_EXPENSES_LABEL_FIELD_ID),
+      currentExpensesLabel: configRecord.getCellValue(CURRENT_EXPENSES_LABEL_FIELD_ID),
     }
     validateConfigTableContent(configs);
     
@@ -81,10 +89,11 @@ export const getRoommatesData = async () => {
   const queryResult = await roommatesTable.selectRecordsAsync();
 
   const roommatesData = queryResult.records.map(record => ({
-    debitorName: record.getCellValue(ROOMMATE_FIELD_ID),
-    debitorIBAN: record.getCellValue(IBAN_FIELD_ID),
-    debitorRUM: record.getCellValue(RUM_FIELD_ID),
-    debitorBIC: record.getCellValue(BIC_FIELD_ID),
+    debitorName: record.getCellValue(ROOMMATE_NAME_FIELD_ID),
+    debitorIBAN: record.getCellValue(ROOMMATE_IBAN_FIELD_ID),
+    debitorRUM: record.getCellValue(ROOMMATE_RUM_FIELD_ID),
+    debitorBIC: record.getCellValue(ROOMMATE_BIC_FIELD_ID),
+    mandateSignatureDate: record.getCellValue(MANDATE_SIGNATURE_DATE_FIELD_ID),
   }));
 
   queryResult.unloadData();
@@ -110,13 +119,35 @@ export const getTransactionsHistoryData = async () => {
   }
 };
 
-export const addRecords = async (tableId, data) => {
+export const createTransactionsHistoryRecords = async (transactionsData) => {
   try {
-    const table = base.getTable(tableId);
+    const table = base.getTable(HISTORY_TABLE_ID);
 
+    const records = transactionsData.map(transaction => ({
+      fields: {
+        [HISTORY_TRANSACTION_ID_FIELD_ID]: transaction.id,
+        [HISTORY_TRANSACTION_NUMBER_FIELD_ID]: transaction.number,
+        [HISTORY_AMOUNT_FIELD_ID]: transaction.amount.toString(),
+        [HISTORY_TYPE_FIELD_ID]: transaction.expenseLabel,
+        [HISTORY_DEBITOR_NAME_FIELD_ID]: transaction.debitorName,
+        [HISTORY_IBAN_FIELD_ID]: transaction.debitorIBAN,
+        [HISTORY_RUM_FIELD_ID]: transaction.debitorRUM,
+        [HISTORY_DATE_FIELD_ID]: dayjs().format('YYYY-MM-DD'),
+      }
+    }))
+
+    await addRecords(table, records);
+  } catch (e) {
+    addMessageAndThrow(e, 'error during history transactions saving');
+  }
+};
+
+
+export const addRecords = async (table, data) => {
+  try {
     const recordsBatches = lodash.chunk(data, BATCH_SIZE);
     await Promise.all(recordsBatches.map((records: typeof data) => table.createRecordsAsync(records)));
   } catch (e) {
-    addMessageAndThrow(e, `error during records creation`);
+    addMessageAndThrow(e, 'error during records creation');
   }
 };

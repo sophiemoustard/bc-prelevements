@@ -22,7 +22,7 @@ const App = () => {
     }
   };
 
-  const setAmountField = (key) => (e) => { setAmounts({ ...amounts, [key]: e.target.value }); };
+  const setAmountField = (key) => (e) => { setAmounts({ ...amounts, [key]: Number(e.target.value) }); };
 
   return (
     <>

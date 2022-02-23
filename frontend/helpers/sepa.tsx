@@ -2,27 +2,14 @@ import { downloadXML } from './files'
 import dayjs from './dayjs';
 import ObjectID from 'bson-objectid';
 import {
-  addRecords,
   getConfigData,
   getTransactionsHistoryData,
   getRoommatesData,
+  createTransactionsHistoryRecords
 } from './airtable';
 import { addMessageAndThrow } from './errors';
-import {
-  AMOUNTS_NATURE,
-  CURRENT_EXPENSES,
-  RENT,
-  RENTAL_EXPENSES,
-  HISTORY_AMOUNT_FIELD_ID,
-  HISTORY_DATE_FIELD_ID,
-  HISTORY_DEBITOR_NAME_FIELD_ID,
-  HISTORY_IBAN_FIELD_ID,
-  HISTORY_RUM_FIELD_ID,
-  HISTORY_TRANSACTION_ID_FIELD_ID,
-  HISTORY_TRANSACTION_NUMBER_FIELD_ID,
-  HISTORY_TYPE_FIELD_ID,
-  HISTORY_TABLE_ID,
-} from '../data/constants';
+import { getFixedNumber, removeSpaces } from './utils'
+import randomize from 'randomatic';
 
 
 export const createXMLDocument = () => ({
@@ -32,9 +19,7 @@ export const createXMLDocument = () => ({
     '@xsi:schemaLocation': 'urn:iso:std:iso:20022:tech:xsd:pain.008.001.02 pain.008.001.02.xsd',
     CstmrDrctDbtInitn: {
       GrpHdr: {},
-      PmtInf: {
-        DrctDbtTxInf: [],
-      },
+      PmtInf: [],
     },
   },
 });
@@ -50,125 +35,193 @@ const generateSEPAHeader = (data) => ({
   },
 });
 
-const addTransactionInfo = (data) => {
-  const obj = { DrctDbtTxInf: [] };
-
-  for (const transaction of data) {
-    obj.DrctDbtTxInf.push({
-      PmtId: {
-        InstrId: transaction.number,
-        EndToEndId: transaction._id,
-      },
-      InstdAmt: {
-        '@Ccy': 'EUR',
-        '#text': transaction.netInclTaxes,
-      },
-      DrctDbtTx: {
-        MndtRltdInf: {
-          MndtId: transaction.rum,
-          DtOfSgntr: 'Date de signature',
+const generatePaymentInfo = data => ({
+  PmtInfId: data.id,
+  PmtMtd: data.method,
+  NbOfTxs: data.txNumber,
+  CtrlSum: getFixedNumber(data.sum, 2),
+  PmtTpInf: {
+    SvcLvl: { Cd: 'SEPA' },
+    LclInstrm: { Cd: 'CORE' },
+    SeqTp: data.sequenceType,
+  },
+  ReqdColltnDt: data.collectionDate,
+  Cdtr: { Nm: data.creditorName },
+  CdtrAcct: {
+    Id: { IBAN: removeSpaces(data.creditorIBAN) },
+    Ccy: 'EUR',
+  },
+  CdtrAgt: { FinInstnId: { BIC: removeSpaces(data.creditorBIC) } },
+  ChrgBr: 'SLEV',
+  CdtrSchmeId: {
+    Id: {
+      PrvtId: {
+        Othr: {
+          Id: removeSpaces(data.ics),
+          SchmeNm: { Prtry: 'SEPA' },
         },
       },
-      DbtrAgt: { FinInstnId: { BIC: transaction.customerInfo.payment.bic } },
-      Dbtr: { Nm: transaction.customerInfo.payment.bankAccountOwner.trim() },
-      DbtrAcct: { Id: { IBAN: transaction.customerInfo.payment.iban } },
-    });
-  }
+    },
+  },
+  DrctDbtTxInf: [],
+});
 
-  return obj;
-};
+const generateTransactionsInfo = (transactions) => transactions.map(transaction => ({
+  PmtId: {
+    InstrId: transaction.number,
+    EndToEndId: transaction.id,
+  },
+  InstdAmt: {
+    '@Ccy': 'EUR',
+    '#text': transaction.amount,
+  },
+  DrctDbtTx: {
+    MndtRltdInf: {
+      MndtId: transaction.debitorRUM,
+      ReqdColltnDt: transaction.mandateSignatureDate,
+    },
+  },
+  DbtrAgt: { FinInstnId: { BIC: removeSpaces(transaction.debitorBIC) } },
+  Dbtr: { Nm: transaction.debitorName.trim() },
+  DbtrAcct: { Id: { IBAN: removeSpaces(transaction.debitorIBAN) } },
+  RmtInf: { Ustrd: transaction.expenseLabel }
+}));
 
 const formatTransactionNumber = (companyPrefixNumber, prefix, transactionNumber) => {
   return `REG-${companyPrefixNumber}${prefix}${transactionNumber.toString().padStart(5, '0')}`;
 };
 
-const getTransactionsHistoryForCurrentMonthAndRUMs = async (date) => {
-  try {
-    const histories = await getTransactionsHistoryData();
+const generateTransactionsForOnePayment = (data) => {
+  const prefixDate = dayjs().format('MMYY');
 
-    const transactionMonthCount = histories.filter(h => dayjs(h.date).isSame(date, 'month')).length || 0;
-    const RUMs = [...new Set(histories.map(h => h.RUM))];
-
-    return { transactionMonthCount, RUMs };
-  } catch (e) {
-    addMessageAndThrow(e, 'error during extraction of history table');
-  }
+  return data.roommatesData.map((roommate, index) => ({
+    id: ObjectID().toHexString(),
+    number: formatTransactionNumber(data.creditorPrefix, prefixDate, data.transactionMonthCount + index + 1),
+    amount: data.amount,
+    expenseLabel: data.expenseLabel,
+    debitorName : roommate.debitorName,
+    debitorIBAN : roommate.debitorIBAN,
+    debitorBIC : roommate.debitorBIC,
+    debitorRUM: roommate.debitorRUM,
+    mandateSignatureDate: roommate.mandateSignatureDate,
+  }))
 };
 
-const formatHistoryData = (roommate, transactionNumber, amounts, date, labels, label) => ({
-  [HISTORY_DEBITOR_NAME_FIELD_ID]: roommate.debitorName,
-  [HISTORY_TRANSACTION_NUMBER_FIELD_ID]: transactionNumber,
-  [HISTORY_TRANSACTION_ID_FIELD_ID]: ObjectID().toHexString(),
-  [HISTORY_AMOUNT_FIELD_ID]: amounts[label].toString(),
-  [HISTORY_RUM_FIELD_ID]: roommate.debitorRUM,
-  [HISTORY_IBAN_FIELD_ID]: roommate.debitorIBAN,
-  [HISTORY_DATE_FIELD_ID]: date,
-  [HISTORY_TYPE_FIELD_ID]: labels.find(item => item.value === label).label,
-});
+const generateTransactions = (amounts, roommatesData, configData, transactionsHistoryData) => {
+  const transactionMonthCount = transactionsHistoryData.filter(h => dayjs().isSame(h.date, 'month')).length || 0;
 
-const formatTransactions = async (configData, roommatesData, amounts) => {
-  try {
-    const rentTransactions = [];
-    const rentalExpenseTransactions = [];
-    const currentExpenseTransations = [];
-    const allTransactions = [];
-    const transactionsLabel = [
-      {label: configData.rentLabel, value: RENT },
-      {label: configData.rentalExpensesLabel, value: RENTAL_EXPENSES },
-      {label: configData.currentExpensesLabel, value: CURRENT_EXPENSES },
-    ];
-    const date = dayjs().toISOString();
-    const prefixDate = dayjs(date).format('MMYY');
+  const transactionsRent = generateTransactionsForOnePayment({
+    roommatesData,
+    amount: amounts.rent,
+    expenseLabel: configData.rentLabel,
+    transactionMonthCount,
+    creditorPrefix: configData.creditorPrefix
+  });
+  const transactionsRentalExpenses = generateTransactionsForOnePayment({
+    roommatesData,
+    amount: amounts.rentalExpenses,
+    expenseLabel: configData.rentalExpensesLabel,
+    transactionMonthCount: transactionMonthCount + transactionsRent.length,
+    creditorPrefix: configData.creditorPrefix
+  });
+  const transactionsCurrentExpenses = generateTransactionsForOnePayment({
+    roommatesData,
+    amount: amounts.currentExpenses,
+    expenseLabel: configData.currentExpensesLabel,
+    transactionMonthCount: transactionMonthCount + transactionsRent.length + transactionsRentalExpenses.length,
+    creditorPrefix: configData.creditorPrefix
+  });
 
-    let { transactionMonthCount } = await getTransactionsHistoryForCurrentMonthAndRUMs(date);
-
-    for (const roommate of roommatesData) {
-      for (const nature of AMOUNTS_NATURE) {
-        transactionMonthCount += 1;
-
-        const transactionNumber = formatTransactionNumber(configData.creditorPrefix, prefixDate, transactionMonthCount);
-        const historyData = formatHistoryData(roommate, transactionNumber, amounts, date, transactionsLabel, nature);
-
-        if (nature === RENT) rentTransactions.push(historyData);
-        else if (nature === RENTAL_EXPENSES) rentalExpenseTransactions.push(historyData);
-        else currentExpenseTransations.push(historyData);
-        allTransactions.push({ fields: historyData });
-      }
-    }
-
-    return { rentTransactions, rentalExpenseTransactions, currentExpenseTransations, allTransactions };
-  } catch (e) {
-    addMessageAndThrow(e, 'error when formatting transaction data');
-  }
+  return { transactionsRent, transactionsRentalExpenses, transactionsCurrentExpenses };
 };
 
 export const downloadSEPAXml = async (amounts) => {
   try {
     const configData = await getConfigData();
     const roommatesData = await getRoommatesData();
-    const formattedRoommatesData = roommatesData.map(rm => ({
-      _id: 'id',
-      number: 'REG1234567',
-      netInclTaxes: '80',
-      rum: rm.debitorRUM,
-      customerInfo: { payment: { bic: rm.debitorBIC, bankAccountOwner: rm.debitorName, iban: rm.debitorIBAN } }
-    }));
+    const transactionsHistoryData = await getTransactionsHistoryData();
+    const randomId = randomize('0', 21);
+
+    
+    const {
+      transactionsRent,
+      transactionsRentalExpenses,
+      transactionsCurrentExpenses
+    } = generateTransactions(amounts, roommatesData, configData, transactionsHistoryData);
+    const allTransactions = [...transactionsRent, ...transactionsRentalExpenses, ...transactionsCurrentExpenses];
+    
+    const rentTotalAmount = transactionsRent.reduce((acc, next) => acc + next.amount, 0);
+    const rentalExpensesTotalAmount = transactionsRentalExpenses.reduce((acc, next) => acc + next.amount, 0);
+    const currentExpensesTotalAmount = transactionsCurrentExpenses.reduce((acc, next) => acc + next.amount, 0);
+    
+    let rentPaymentInfo;
+    if (transactionsRent.length) {
+      rentPaymentInfo = generatePaymentInfo({
+        id: `MSG0LYER${randomId}R`,
+        sequenceType: 'RCUR',
+        method: 'DD',
+        txNumber: transactionsRent.length,
+        sum: rentTotalAmount,
+        collectionDate: dayjs().format('YYYY-MM-DD'),
+        creditorName: configData.creditorName,
+        creditorIBAN: configData.creditorIBAN,
+        creditorBIC: configData.creditorBIC,
+        ics: configData.ics,
+      })
+      rentPaymentInfo.DrctDbtTxInf = generateTransactionsInfo(transactionsRent);
+    }
+
+    let rentalExpensesPaymentInfo;
+    if (transactionsRentalExpenses.length) {
+      rentalExpensesPaymentInfo = generatePaymentInfo({
+        id: `MSG0CHRG${randomId}R`,
+        sequenceType: 'RCUR',
+        method: 'DD',
+        txNumber: transactionsRentalExpenses.length,
+        sum: rentalExpensesTotalAmount,
+        collectionDate: dayjs().format('YYYY-MM-DD'),
+        creditorName: configData.creditorName,
+        creditorIBAN: configData.creditorIBAN,
+        creditorBIC: configData.creditorBIC,
+        ics: configData.ics,
+      })
+      rentalExpensesPaymentInfo.DrctDbtTxInf = generateTransactionsInfo(transactionsRentalExpenses);
+    }
+
+    let currentExpensesPaymentInfo;
+    if (transactionsCurrentExpenses.length) {
+      currentExpensesPaymentInfo = generatePaymentInfo({
+        id: `MSG0PROV${randomId}R`,
+        sequenceType: 'RCUR',
+        method: 'DD',
+        txNumber: transactionsCurrentExpenses.length,
+        sum: currentExpensesTotalAmount,
+        collectionDate: dayjs().format('YYYY-MM-DD'),
+        creditorName: configData.creditorName,
+        creditorIBAN: configData.creditorIBAN,
+        creditorBIC: configData.creditorBIC,
+        ics: configData.ics,
+      })
+      currentExpensesPaymentInfo.DrctDbtTxInf = generateTransactionsInfo(transactionsCurrentExpenses);
+    }
+    
+    
     const xmlContent = createXMLDocument();
-  
     xmlContent.Document.CstmrDrctDbtInitn.GrpHdr = generateSEPAHeader({
-      sepaId: 'MSG123456789G',
-      createdDate: '2022-01-20',
-      transactionsCount: 32,
-      totalSum: 11,
+      sepaId: `MSG00000${randomId}G`,
+      createdDate: dayjs().format('YYYY-MM-DDTHH:mm:ss'),
+      transactionsCount: allTransactions.length,
+      totalSum: rentTotalAmount + rentalExpensesTotalAmount + currentExpensesTotalAmount,
       creditorName: configData.creditorName,
       ics: configData.ics,
     });
+    xmlContent.Document.CstmrDrctDbtInitn.PmtInf = [
+      rentPaymentInfo,
+      rentalExpensesPaymentInfo,
+      currentExpensesPaymentInfo
+    ];
 
-    xmlContent.Document.CstmrDrctDbtInitn.PmtInf = addTransactionInfo(formattedRoommatesData);
-
-    const { allTransactions } = await formatTransactions(configData, roommatesData, amounts);
-
-    await addRecords(HISTORY_TABLE_ID, allTransactions);
+    await createTransactionsHistoryRecords(allTransactions);
   
     const filename = `prelevements_biens_communs_${dayjs().format('YYYY-MM-DD_HH-mm')}.xml`;
     return downloadXML(xmlContent, filename);
