@@ -22,15 +22,19 @@ const App = () => {
     }
   };
 
-  const setAmountField = (key) => (e) => { setAmounts({ ...amounts, [key]: Number(e.target.value) }); };
+  const setAmountField = (key) => (e) => { setAmounts({ ...amounts, [key]: e.target.value }); };
+  const formatAmountField = (key) => (e) => {
+    setAmounts({ ...amounts, [key]: parseFloat(Number(e.target.value).toFixed(2)) });
+  };
 
   return (
     <>
-      <NiInput value={amounts.rent} onChange={setAmountField('rent')} label="Montant Loyer" type='number' required/>
+      <NiInput value={amounts.rent} onChange={setAmountField('rent')} label="Montant Loyer" type='number' 
+        onBlur={formatAmountField('rent')} required />
       <NiInput value={amounts.rentalExpenses} onChange={setAmountField('rentalExpenses')} type='number'
-          label="Montant Charges locatives" required/>
+        onBlur={formatAmountField('rentalExpenses')} label="Montant Charges locatives" required />
       <NiInput value={amounts.currentExpenses} onChange={setAmountField('currentExpenses')} type='number'
-          label="Montant Frais courants" required/>
+        onBlur={formatAmountField('currentExpenses')} label="Montant Frais courants" required />
       <Button onClick={download} icon="edit" disabled={!enableDownload}>Telecharger Le SEPA</Button>
       {error.value && <Text style={style.error}>{error.message}</Text>}
     </>
