@@ -29,13 +29,13 @@ const App = () => {
 
   return (
     <>
-      <NiInput value={amounts.rent} onChange={setAmountField('rent')} label="Montant Loyer" type='number' 
-        onBlur={formatAmountField('rent')} required />
-      <NiInput value={amounts.rentalExpenses} onChange={setAmountField('rentalExpenses')} type='number'
-        onBlur={formatAmountField('rentalExpenses')} label="Montant Charges locatives" required />
-      <NiInput value={amounts.currentExpenses} onChange={setAmountField('currentExpenses')} type='number'
-        onBlur={formatAmountField('currentExpenses')} label="Montant Frais courants" required />
-      <Button onClick={download} icon="edit" disabled={!enableDownload}>Telecharger Le SEPA</Button>
+      <NiInput value={amounts.rent} onChange={setAmountField('rent')} label="Montant Loyer" type='number' required
+        onBlur={formatAmountField('rent')} />
+      <NiInput value={amounts.rentalExpenses} onChange={setAmountField('rentalExpenses')} type='number' required
+        onBlur={formatAmountField('rentalExpenses')} label="Montant Charges locatives" />
+      <NiInput value={amounts.currentExpenses} onChange={setAmountField('currentExpenses')} type='number' required
+        onBlur={formatAmountField('currentExpenses')} label="Montant Frais courants" />
+      <Button onClick={download} icon="download" disabled={!enableDownload}>Telecharger le SEPA</Button>
       {error.value && <Text style={style.error}>{error.message}</Text>}
     </>
   );
