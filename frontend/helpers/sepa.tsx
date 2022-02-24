@@ -78,7 +78,7 @@ const generateTransactionsInfo = (transactions) => transactions.map(transaction 
   DrctDbtTx: {
     MndtRltdInf: {
       MndtId: transaction.debitorRUM,
-      ReqdColltnDt: transaction.mandateSignatureDate,
+      DtOfSgntr: transaction.mandateSignatureDate,
     },
   },
   DbtrAgt: { FinInstnId: { BIC: removeSpaces(transaction.debitorBIC) } },
