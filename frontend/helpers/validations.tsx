@@ -13,6 +13,6 @@ export const isValidPrefix = value => value && /^[0-9]{3}$/.test(value);
 
 export const isValidTransactionLabel = value => value.length <= 140; 
 
-export const isValidRUM = value => value.length <= 35 &&  /^[0-9A-Z]{1,35}$/.test(value);
+export const isValidRUM = value => value && /^[0-9A-Z]{1,35}$/.test(value);
 
 export const isValidDate = value => value && dayjs(value).isValid();

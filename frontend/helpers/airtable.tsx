@@ -94,12 +94,12 @@ export const getConfigData = async () => {
 };
 
 const checkEmptyRecords = (records) => {
-  const hasEmptyRecord = records.find(record =>
-    (record.debitorName === ' ') &&
-    !(record.debitorIBAN) &&
-    !(record.debitorBIC) &&
-    !(record.RUM) &&
-    !(record.mandateSignatureDate)) ;
+  const hasEmptyRecord = records.some(record =>
+    !record.debitorName.trim() &&
+    !record.debitorIBAN &&
+    !record.debitorBIC &&
+    !record.RUM &&
+    !record.mandateSignatureDate);
   if (hasEmptyRecord) throwValidationError('Erreur dans la table COLOCATAIRES: au moins une ligne est vide.');
 };
 
@@ -112,7 +112,10 @@ const validateRoommatesTableContent = (data) => {
   if (!isValidDate(data.mandateSignatureDate)) errors.push('la date de signature de mandat est invalide,');
 
   if (errors.length) {
-    throwValidationError(['Erreur(s) dans la table COLOCATAIRES:', ...errors].join(' '));
+    throwValidationError([
+      `Erreur(s) dans la table COLOCATAIRES - Pour le colocataire ${data.debitorName}: `,
+      ...errors].join(' '),
+    );
   }
 };
 
