@@ -4,22 +4,25 @@ import NiInput from './components/form/input';
 import { downloadSEPAXml } from './helpers/sepa';
 import { errorReducer, initialErrorState, SET_ERROR, RESET_ERROR } from './reducers/error';
 import { INTERNAL_ERROR_MESSAGE, VALIDATION_ERROR } from './data/constants'
+import { throwValidationError } from './helpers/errors';
 
 const App = () => {
   const [inputAmounts, setInputAmounts] = useState({ rent: "0", rentalExpenses: "0", currentExpenses: "0" });
   const [error, dispatchError] = useReducer(errorReducer, initialErrorState);
 
-  const numbersAmount = {
-    rent: Number(inputAmounts.rent),
-    rentalExpenses: Number(inputAmounts.rentalExpenses),
-    currentExpenses: Number(inputAmounts.currentExpenses)
-  }
-  const enableDownload = numbersAmount.rent > 0 && numbersAmount.rentalExpenses > 0 &&
-    numbersAmount.currentExpenses > 0;
-
   const download = async () => {
     dispatchError({ type: RESET_ERROR });
     try {
+      const numbersAmount = {
+        rent: Number(inputAmounts.rent),
+        rentalExpenses: Number(inputAmounts.rentalExpenses),
+        currentExpenses: Number(inputAmounts.currentExpenses)
+      }
+
+      const areValidAmounts = numbersAmount.rent > 0 && numbersAmount.rentalExpenses > 0 && 
+        numbersAmount.currentExpenses > 0;
+      if (!areValidAmounts) throw throwValidationError('Erreur, les montants doivent être strictement positifs.');
+
       await downloadSEPAXml(numbersAmount);
     } catch (e) {
       console.error(e);
@@ -44,7 +47,7 @@ const App = () => {
         onBlur={formatAmountField('rentalExpenses')} label="Montant Charges locatives" />
       <NiInput value={inputAmounts.currentExpenses} onChange={setAmountField('currentExpenses')} type='number' required
         onBlur={formatAmountField('currentExpenses')} label="Montant Frais courants" />
-      <Button onClick={download} icon="download" disabled={!enableDownload}>Telecharger le SEPA</Button>
+      <Button onClick={download} icon="download">Telecharger le SEPA</Button>
       {error.value && <Text style={style.error}>{error.message}</Text>}
     </>
   );
