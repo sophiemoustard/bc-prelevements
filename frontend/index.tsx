@@ -6,15 +6,21 @@ import { errorReducer, initialErrorState, SET_ERROR, RESET_ERROR } from './reduc
 import { INTERNAL_ERROR_MESSAGE, VALIDATION_ERROR } from './data/constants'
 
 const App = () => {
-  const [amounts, setAmounts] = useState({ rent: 1, rentalExpenses: 1, currentExpenses: 1 });
+  const [inputAmounts, setInputAmounts] = useState({ rent: "0", rentalExpenses: "0", currentExpenses: "0" });
   const [error, dispatchError] = useReducer(errorReducer, initialErrorState);
 
-  const enableDownload = amounts.rent > 0 && amounts.rentalExpenses > 0 && amounts.currentExpenses > 0;
+  const numbersAmount = {
+    rent: Number(inputAmounts.rent),
+    rentalExpenses: Number(inputAmounts.rentalExpenses),
+    currentExpenses: Number(inputAmounts.currentExpenses)
+  }
+  const enableDownload = numbersAmount.rent > 0 && numbersAmount.rentalExpenses > 0 &&
+    numbersAmount.currentExpenses > 0;
 
   const download = async () => {
     dispatchError({ type: RESET_ERROR });
     try {
-      await downloadSEPAXml(amounts);
+      await downloadSEPAXml(numbersAmount);
     } catch (e) {
       console.error(e);
       if (e.name === VALIDATION_ERROR) dispatchError({ type: SET_ERROR, payload: e.message });
@@ -22,18 +28,21 @@ const App = () => {
     }
   };
 
-  const setAmountField = (key) => (e) => { setAmounts({ ...amounts, [key]: e.target.value }); };
+  const setAmountField = (key) => (e) => { setInputAmounts({ ...inputAmounts, [key]: e.target.value }); };
   const formatAmountField = (key) => (e) => {
-    setAmounts({ ...amounts, [key]: parseFloat(Number(e.target.value).toFixed(2)) });
+    const amountWithExactlyTwoDecimal = Number(e.target.value).toFixed(2);
+    const amount = parseFloat(amountWithExactlyTwoDecimal).toString()
+
+    setInputAmounts({ ...inputAmounts, [key]: amount });
   };
 
   return (
     <>
-      <NiInput value={amounts.rent} onChange={setAmountField('rent')} label="Montant Loyer" type='number' required
+      <NiInput value={inputAmounts.rent} onChange={setAmountField('rent')} label="Montant Loyer" type='number' required
         onBlur={formatAmountField('rent')} />
-      <NiInput value={amounts.rentalExpenses} onChange={setAmountField('rentalExpenses')} type='number' required
+      <NiInput value={inputAmounts.rentalExpenses} onChange={setAmountField('rentalExpenses')} type='number' required
         onBlur={formatAmountField('rentalExpenses')} label="Montant Charges locatives" />
-      <NiInput value={amounts.currentExpenses} onChange={setAmountField('currentExpenses')} type='number' required
+      <NiInput value={inputAmounts.currentExpenses} onChange={setAmountField('currentExpenses')} type='number' required
         onBlur={formatAmountField('currentExpenses')} label="Montant Frais courants" />
       <Button onClick={download} icon="download" disabled={!enableDownload}>Telecharger le SEPA</Button>
       {error.value && <Text style={style.error}>{error.message}</Text>}
