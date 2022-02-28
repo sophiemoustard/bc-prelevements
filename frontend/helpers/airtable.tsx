@@ -112,9 +112,8 @@ const validateRoommatesTableContent = (data) => {
   if (!isValidDate(data.mandateSignatureDate)) errors.push('la date de signature de mandat est invalide,');
 
   if (errors.length) {
-    throwValidationError([
-      `Erreur(s) dans la table COLOCATAIRES - Pour le colocataire ${data.debitorName}: `,
-      ...errors].join(' '),
+    throwValidationError(
+      [`Erreur(s) dans la table COLOCATAIRES - Pour le colocataire ${data.debitorName}: `, ...errors].join(' ')
     );
   }
 };
