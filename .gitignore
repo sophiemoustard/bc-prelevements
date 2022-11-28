@@ -4,3 +4,4 @@
 /.block
 /.env
 .DS_Store
+/.tmp

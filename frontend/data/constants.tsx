@@ -1,5 +1,5 @@
 import { base } from '@airtable/blocks';
-import { devModelsId, prodModelsId, PROD_BASE_ID } from '../../.env/models'
+import { devModelsId, prodHayModelsId, prodRueilModelsId, PROD_HAY_BASE_ID, PROD_RUEIL_BASE_ID } from '../../.env/models'
 
 
 /*
@@ -14,7 +14,10 @@ export const BATCH_SIZE = 50;
  ************************************************* MODEL IDS ********************************************************** 
  */
 
-const modelsId = base.id === PROD_BASE_ID ? prodModelsId : devModelsId;
+let modelsId: any;
+if (base.id === PROD_HAY_BASE_ID) modelsId = prodHayModelsId;
+else if (base.id === PROD_RUEIL_BASE_ID) modelsId = prodRueilModelsId;
+else modelsId = devModelsId;
 
 // ROOM MATES TABLE
 export const ROOMMATES_TABLE_ID = modelsId.roommatesTableId;
